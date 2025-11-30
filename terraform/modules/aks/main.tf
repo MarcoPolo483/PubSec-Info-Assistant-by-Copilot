@@ -202,7 +202,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
     os_disk_size_gb     = 128
     os_disk_type        = "Managed"
     type                = "VirtualMachineScaleSets"
-    
+
     node_labels = {
       "role" = "system"
     }
@@ -241,22 +241,11 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   # Azure Policy
-  dynamic "azure_policy_enabled" {
-    for_each = var.enable_azure_policy ? [true] : []
-    content {
-      enabled = true
-    }
-  }
+  azure_policy_enabled = var.enable_azure_policy
 
   # Workload Identity
-  dynamic "workload_identity_enabled" {
-    for_each = var.enable_workload_identity ? [true] : []
-    content {
-      enabled = true
-    }
-  }
-
-  oidc_issuer_enabled = var.enable_workload_identity
+  workload_identity_enabled = var.enable_workload_identity
+  oidc_issuer_enabled       = var.enable_workload_identity
 
   # Secret rotation
   dynamic "key_vault_secrets_provider" {
@@ -316,7 +305,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "user" {
   vm_size               = var.user_node_pool_vm_size
   node_count            = var.user_node_pool_node_count
   vnet_subnet_id        = var.subnet_id
-  
+
   enable_auto_scaling = true
   min_count           = var.user_node_pool_min_count
   max_count           = var.user_node_pool_max_count
@@ -324,10 +313,10 @@ resource "azurerm_kubernetes_cluster_node_pool" "user" {
   os_disk_size_gb     = 256
   os_disk_type        = "Managed"
   os_type             = "Linux"
-  
+
   node_labels = {
-    "role"        = "user"
-    "workload"    = "application"
+    "role"     = "user"
+    "workload" = "application"
   }
 
   node_taints = []

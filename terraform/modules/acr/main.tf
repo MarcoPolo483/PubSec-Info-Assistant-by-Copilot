@@ -26,11 +26,11 @@ variable "private_dns_zone_ids" { type = list(string) }
 variable "tags" { type = map(string) }
 
 resource "azurerm_container_registry" "acr" {
-  name                = "${replace(var.project_name, "-", "")}${var.environment}acr"
-  resource_group_name = var.resource_group_name
-  location            = var.location
-  sku                 = var.sku
-  admin_enabled       = var.admin_enabled
+  name                          = "${replace(var.project_name, "-", "")}${var.environment}acr"
+  resource_group_name           = var.resource_group_name
+  location                      = var.location
+  sku                           = var.sku
+  admin_enabled                 = var.admin_enabled
   public_network_access_enabled = var.public_network_access
 
   identity {
@@ -83,6 +83,17 @@ resource "azurerm_private_endpoint" "acr" {
   tags = var.tags
 }
 
-output "acr_name" { value = azurerm_container_registry.acr.name }
-output "acr_id" { value = azurerm_container_registry.acr.id }
-output "acr_login_server" { value = azurerm_container_registry.acr.login_server }
+output "acr_name" {
+  description = "ACR name"
+  value       = azurerm_container_registry.acr.name
+}
+
+output "acr_id" {
+  description = "ACR resource ID"
+  value       = azurerm_container_registry.acr.id
+}
+
+output "acr_login_server" {
+  description = "ACR login server URL"
+  value       = azurerm_container_registry.acr.login_server
+}

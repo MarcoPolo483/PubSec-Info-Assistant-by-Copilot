@@ -21,7 +21,10 @@ variable "sampling_percentage" { type = number }
 variable "enable_alerts" { type = bool }
 variable "alert_email_addresses" { type = list(string) }
 variable "alert_webhook_urls" { type = list(string) }
-variable "aks_cluster_id" { type = string }
+variable "aks_cluster_id" { 
+  type    = string
+  default = null
+}
 variable "tags" { type = map(string) }
 
 resource "azurerm_log_analytics_workspace" "law" {
@@ -69,7 +72,7 @@ resource "azurerm_monitor_action_group" "main" {
 }
 
 resource "azurerm_monitor_metric_alert" "aks_cpu" {
-  count               = var.enable_alerts ? 1 : 0
+  count               = var.enable_alerts && var.aks_cluster_id != null ? 1 : 0
   name                = "${var.project_name}-${var.environment}-aks-cpu-alert"
   resource_group_name = var.resource_group_name
   scopes              = [var.aks_cluster_id]
@@ -94,7 +97,7 @@ resource "azurerm_monitor_metric_alert" "aks_cpu" {
 }
 
 resource "azurerm_monitor_metric_alert" "aks_memory" {
-  count               = var.enable_alerts ? 1 : 0
+  count               = var.enable_alerts && var.aks_cluster_id != null ? 1 : 0
   name                = "${var.project_name}-${var.environment}-aks-memory-alert"
   resource_group_name = var.resource_group_name
   scopes              = [var.aks_cluster_id]
@@ -118,8 +121,29 @@ resource "azurerm_monitor_metric_alert" "aks_memory" {
   tags = var.tags
 }
 
-output "log_analytics_workspace_id" { value = azurerm_log_analytics_workspace.law.id }
-output "log_analytics_workspace_name" { value = azurerm_log_analytics_workspace.law.name }
-output "application_insights_name" { value = azurerm_application_insights.ai.name }
-output "application_insights_connection_string" { value = azurerm_application_insights.ai.connection_string; sensitive = true }
-output "application_insights_instrumentation_key" { value = azurerm_application_insights.ai.instrumentation_key; sensitive = true }
+output "log_analytics_workspace_id" {
+  description = "Log Analytics workspace ID"
+  value       = azurerm_log_analytics_workspace.law.id
+}
+
+output "log_analytics_workspace_name" {
+  description = "Log Analytics workspace name"
+  value       = azurerm_log_analytics_workspace.law.name
+}
+
+output "application_insights_name" {
+  description = "Application Insights name"
+  value       = azurerm_application_insights.ai.name
+}
+
+output "application_insights_connection_string" {
+  description = "Application Insights connection string"
+  value       = azurerm_application_insights.ai.connection_string
+  sensitive   = true
+}
+
+output "application_insights_instrumentation_key" {
+  description = "Application Insights instrumentation key"
+  value       = azurerm_application_insights.ai.instrumentation_key
+  sensitive   = true
+}

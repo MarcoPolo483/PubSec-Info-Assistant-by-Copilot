@@ -76,11 +76,11 @@ locals {
   )
 
   # Network configuration
-  vnet_address_space     = var.vnet_address_space
-  aks_subnet_cidr        = cidrsubnet(local.vnet_address_space[0], 4, 0)
-  appgw_subnet_cidr      = cidrsubnet(local.vnet_address_space[0], 4, 1)
-  private_endpoint_cidr  = cidrsubnet(local.vnet_address_space[0], 4, 2)
-  database_subnet_cidr   = cidrsubnet(local.vnet_address_space[0], 4, 3)
+  vnet_address_space    = var.vnet_address_space
+  aks_subnet_cidr       = cidrsubnet(local.vnet_address_space[0], 4, 0)
+  appgw_subnet_cidr     = cidrsubnet(local.vnet_address_space[0], 4, 1)
+  private_endpoint_cidr = cidrsubnet(local.vnet_address_space[0], 4, 2)
+  database_subnet_cidr  = cidrsubnet(local.vnet_address_space[0], 4, 3)
 }
 
 # =============================================================================
@@ -129,16 +129,16 @@ module "acr" {
   project_name        = local.project_name
   environment         = local.environment
 
-  sku                      = var.acr_sku
-  admin_enabled            = false
-  public_network_access    = var.acr_public_network_access
-  quarantine_policy        = true
-  retention_days           = var.acr_retention_days
+  sku                       = var.acr_sku
+  admin_enabled             = false
+  public_network_access     = var.acr_public_network_access
+  quarantine_policy         = true
+  retention_days            = var.acr_retention_days
   geo_replication_locations = var.acr_geo_replication_locations
 
   # Private endpoint integration
-  subnet_id              = module.networking.private_endpoint_subnet_id
-  private_dns_zone_ids   = [module.networking.acr_private_dns_zone_id]
+  subnet_id            = module.networking.private_endpoint_subnet_id
+  private_dns_zone_ids = [module.networking.acr_private_dns_zone_id]
 
   tags = local.common_tags
 
@@ -158,17 +158,17 @@ module "aks" {
   environment         = local.environment
 
   # Network configuration
-  vnet_id              = module.networking.vnet_id
-  subnet_id            = module.networking.aks_subnet_id
-  dns_service_ip       = var.aks_dns_service_ip
-  docker_bridge_cidr   = var.aks_docker_bridge_cidr
-  service_cidr         = var.aks_service_cidr
+  vnet_id            = module.networking.vnet_id
+  subnet_id          = module.networking.aks_subnet_id
+  dns_service_ip     = var.aks_dns_service_ip
+  docker_bridge_cidr = var.aks_docker_bridge_cidr
+  service_cidr       = var.aks_service_cidr
 
   # Cluster configuration
-  kubernetes_version      = var.aks_kubernetes_version
+  kubernetes_version        = var.aks_kubernetes_version
   automatic_channel_upgrade = var.aks_automatic_channel_upgrade
-  sku_tier               = var.aks_sku_tier
-  
+  sku_tier                  = var.aks_sku_tier
+
   # System node pool
   system_node_pool_vm_size    = var.aks_system_node_pool_vm_size
   system_node_pool_node_count = var.aks_system_node_pool_node_count
@@ -176,17 +176,17 @@ module "aks" {
   system_node_pool_max_count  = var.aks_system_node_pool_max_count
 
   # User node pool (application workloads)
-  user_node_pool_vm_size     = var.aks_user_node_pool_vm_size
-  user_node_pool_node_count  = var.aks_user_node_pool_node_count
-  user_node_pool_min_count   = var.aks_user_node_pool_min_count
-  user_node_pool_max_count   = var.aks_user_node_pool_max_count
+  user_node_pool_vm_size    = var.aks_user_node_pool_vm_size
+  user_node_pool_node_count = var.aks_user_node_pool_node_count
+  user_node_pool_min_count  = var.aks_user_node_pool_min_count
+  user_node_pool_max_count  = var.aks_user_node_pool_max_count
 
   # Security features
-  enable_azure_policy            = true
-  enable_azure_defender          = var.enable_azure_defender
-  enable_pod_security_policy     = true
-  enable_secret_rotation         = true
-  enable_workload_identity       = true
+  enable_azure_policy        = true
+  enable_azure_defender      = var.enable_azure_defender
+  enable_pod_security_policy = true
+  enable_secret_rotation     = true
+  enable_workload_identity   = true
 
   # Monitoring
   log_analytics_workspace_id = module.monitoring.log_analytics_workspace_id
@@ -215,11 +215,11 @@ module "keyvault" {
   project_name        = local.project_name
   environment         = local.environment
 
-  sku_name                  = var.keyvault_sku
-  enable_soft_delete        = true
+  sku_name                   = var.keyvault_sku
+  enable_soft_delete         = true
   soft_delete_retention_days = 90
-  enable_purge_protection   = var.environment == "production"
-  enable_rbac_authorization = true
+  enable_purge_protection    = var.environment == "production"
+  enable_rbac_authorization  = true
 
   # Network configuration
   public_network_access = var.keyvault_public_network_access
@@ -227,8 +227,8 @@ module "keyvault" {
   private_dns_zone_ids  = [module.networking.keyvault_private_dns_zone_id]
 
   # AKS integration (for workload identity)
-  aks_principal_id    = module.aks.kubelet_identity_object_id
-  aks_tenant_id       = data.azurerm_client_config.current.tenant_id
+  aks_principal_id = module.aks.kubelet_identity_object_id
+  aks_tenant_id    = data.azurerm_client_config.current.tenant_id
 
   # Secrets to create
   secrets = {
@@ -265,18 +265,19 @@ module "monitoring" {
 
   # Log Analytics
   log_retention_days = var.log_retention_days
-  
+
   # Application Insights
-  application_type = "web"
+  application_type    = "web"
   sampling_percentage = var.appinsights_sampling_percentage
 
   # Alerts
-  enable_alerts = var.enable_monitoring_alerts
+  enable_alerts         = var.enable_monitoring_alerts
   alert_email_addresses = var.alert_email_addresses
   alert_webhook_urls    = var.alert_webhook_urls
 
-  # AKS integration
-  aks_cluster_id = module.aks.aks_cluster_id
+  # AKS integration - disabled to avoid circular dependency
+  # AKS alerts can be added separately after both modules are created
+  # aks_cluster_id = module.aks.aks_cluster_id
 
   tags = local.common_tags
 }
@@ -296,21 +297,21 @@ module "application_gateway" {
 
   # Network configuration
   subnet_id = module.networking.appgw_subnet_id
-  
+
   # SKU configuration
-  sku_name     = var.appgw_sku_name
-  sku_tier     = var.appgw_sku_tier
-  capacity     = var.appgw_capacity
-  
+  sku_name = var.appgw_sku_name
+  sku_tier = var.appgw_sku_tier
+  capacity = var.appgw_capacity
+
   # Autoscaling
   enable_autoscaling = var.appgw_enable_autoscaling
   min_capacity       = var.appgw_min_capacity
   max_capacity       = var.appgw_max_capacity
 
   # WAF configuration
-  enable_waf        = var.appgw_enable_waf
-  waf_mode          = var.appgw_waf_mode
-  waf_rule_set_type = "OWASP"
+  enable_waf           = var.appgw_enable_waf
+  waf_mode             = var.appgw_waf_mode
+  waf_rule_set_type    = "OWASP"
   waf_rule_set_version = "3.2"
 
   # SSL/TLS
