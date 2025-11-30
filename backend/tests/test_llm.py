@@ -35,13 +35,14 @@ def mock_openai_client():
 @pytest.fixture
 def openai_adapter(mock_openai_client):
     """Create OpenAI adapter with mocked client"""
-    with patch('openai.AsyncOpenAI', return_value=mock_openai_client):
-        adapter = OpenAIAdapter(
-            api_key="test-key",
-            model="gpt-4-turbo-preview",
-            temperature=0.0
-        )
-        return adapter
+    adapter = OpenAIAdapter(
+        api_key="test-key",
+        model="gpt-4-turbo-preview",
+        temperature=0.0
+    )
+    # Replace the client (stub or real) with our mock
+    adapter.client = mock_openai_client
+    return adapter
 
 
 @pytest.mark.asyncio

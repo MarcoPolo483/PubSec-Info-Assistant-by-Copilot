@@ -1,9 +1,10 @@
 """Main FastAPI application."""
 import logging
+import uuid
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Any
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Header, Depends
+from fastapi import FastAPI, HTTPException, UploadFile, File, Header, Depends, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
@@ -34,6 +35,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # Startup
     logger.info("Starting application...")
+    
+    # Validate OpenAI configuration
+    if not settings.openai_api_key or settings.openai_api_key == "your-api-key-here":
+        if settings.environment == "production":
+            logger.error("OpenAI API key missing in production; failing fast.")
+            raise RuntimeError("OpenAI API key required in production")
+        else:
+            logger.warning("OpenAI API key missing; OpenAI-dependent features disabled in test/dev.")
+    
     ingestion_service = IngestionService()
     rag_service = RAGService()
     logger.info("Application started successfully")
@@ -42,10 +52,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # Shutdown
     logger.info("Shutting down application...")
-    if ingestion_service:
-        await ingestion_service.close()
-    if rag_service:
-        await rag_service.close()
+    try:
+        if ingestion_service:
+            await ingestion_service.close()
+        if rag_service:
+            await rag_service.close()
+    except Exception as e:
+        logger.error(f"Error during shutdown: {e}", exc_info=True)
     logger.info("Application shutdown complete")
 
 
@@ -70,6 +83,38 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Request-id and security headers middleware
+@app.middleware("http")
+async def add_request_context(request: Request, call_next):
+    """Add request-id, security headers, and structured logging context."""
+    request_id = str(uuid.uuid4())
+    request.state.request_id = request_id
+    
+    # Extract tenant for logging
+    tenant_id = request.headers.get(settings.tenant_header_name, settings.default_tenant_id)
+    
+    # Log request with context
+    logger.info(
+        f"Request started",
+        extra={
+            "request_id": request_id,
+            "tenant_id": tenant_id,
+            "method": request.method,
+            "path": request.url.path,
+        }
+    )
+    
+    response = await call_next(request)
+    
+    # Add security headers to all responses
+    response.headers["X-Request-Id"] = request_id
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Content-Security-Policy"] = "default-src 'none'; img-src data:; style-src 'self' 'unsafe-inline'; script-src 'none'"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    
+    return response
 
 # Basic API Key + in-memory rate limiting (per-process)
 from time import time
@@ -96,6 +141,20 @@ def rate_limit(api_key: str = Depends(_require_api_key)):
     if len(window) > MAX_REQUESTS_PER_WINDOW:
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     return api_key
+
+# Custom exception handler for unified error schema
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Return unified error schema for all HTTP exceptions."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": {
+                "code": exc.status_code,
+                "message": exc.detail
+            }
+        }
+    )
 
 # Add Prometheus metrics endpoint
 metrics_app = make_asgi_app()
@@ -208,7 +267,7 @@ async def delete_document(
 async def get_collection_stats(
     tenant_id: str = Depends(get_tenant_id),
     api_key: str = Depends(rate_limit),
-) -> dict[str, any]:
+) -> dict[str, Any]:
     """Get collection statistics for a tenant."""
     if not ingestion_service:
         raise HTTPException(status_code=503, detail="Ingestion service not available")
@@ -228,6 +287,11 @@ async def get_collection_stats(
         raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")
 
 
+# Explicit OPTIONS handler for CORS preflight on query endpoint to avoid 400 due to required params
+@app.options("/api/v1/query")
+async def query_preflight() -> Response:
+    return Response(status_code=204)
+
 # RAG Query endpoint
 @app.post(
     "/api/v1/query",
@@ -241,7 +305,7 @@ async def query(
     use_cache: bool = True,
     tenant_id: str = Depends(get_tenant_id),
     api_key: str = Depends(rate_limit),
-) -> dict[str, any]:
+) -> dict[str, Any]:
     """Query the RAG system with a question."""
     if not rag_service:
         raise HTTPException(status_code=503, detail="RAG service not available")
@@ -285,7 +349,7 @@ async def query(
 async def get_tenant_stats(
     tenant_id: str = Depends(get_tenant_id),
     api_key: str = Depends(rate_limit),
-) -> dict[str, any]:
+) -> dict[str, Any]:
     """Get tenant statistics including balance and collection info."""
     if not rag_service:
         raise HTTPException(status_code=503, detail="RAG service not available")

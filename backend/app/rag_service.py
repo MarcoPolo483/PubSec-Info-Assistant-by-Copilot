@@ -3,12 +3,12 @@ import logging
 import time
 from typing import Any
 
-from ..cache.redis_cache import RedisCache
-from ..config import settings
-from ..llm.adapters import LLMAdapterFactory
-from ..llm.models import LLMRequest, LLMResponse
-from ..retrieval.models import SearchQuery
-from ..retrieval.retriever import Retriever
+from .cache.redis_cache import RedisCache
+from .config import settings
+from .llm.adapters import LLMAdapterFactory
+from .llm.models import LLMRequest, LLMResponse
+from .retrieval.models import SearchQuery
+from .retrieval.retriever import Retriever
 
 logger = logging.getLogger(__name__)
 

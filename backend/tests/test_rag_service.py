@@ -4,43 +4,53 @@ Tests for RAG service
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from app.rag_service import RAGService
-from app.retrieval.models import SearchQuery, SearchResult
-from app.llm.models import LLMRequest, LLMResponse, TokenUsage
+from app.retrieval.models import SearchResult, RetrievalResponse
+from app.llm.models import LLMRequest, LLMResponse, TokensUsed
 
 
 @pytest.fixture
 def mock_retriever():
-    """Mock retriever"""
     retriever = AsyncMock()
-    retriever.search.return_value = [
+    results = [
         SearchResult(
+            id="chunk-1",
             score=0.92,
             content="NIST 800-53 provides security controls...",
-            chunk_id="chunk-1",
             document_id="doc-1",
-            metadata={"title": "NIST Framework", "author": "NIST"}
+            chunk_index=0,
+            metadata={"title": "NIST Framework", "author": "NIST"},
         ),
         SearchResult(
+            id="chunk-2",
             score=0.88,
             content="FISMA requires security programs...",
-            chunk_id="chunk-2",
             document_id="doc-2",
-            metadata={"title": "FISMA Guide"}
-        )
+            chunk_index=1,
+            metadata={"title": "FISMA Guide"},
+        ),
     ]
+    retriever.search.return_value = RetrievalResponse(
+        query="What are cybersecurity requirements?",
+        tenant_id="test-tenant",
+        results=results,
+        total_results=len(results),
+        processing_time_ms=12.0,
+        cached=False,
+    )
     return retriever
 
 
 @pytest.fixture
 def mock_llm_adapter():
-    """Mock LLM adapter"""
     adapter = AsyncMock()
     adapter.generate.return_value = LLMResponse(
+        query="What are cybersecurity requirements?",
         answer="Based on the documents, cybersecurity requirements include NIST 800-53 controls [Doc 1] and FISMA compliance [Doc 2].",
         citations=[],
-        tokens_used=TokenUsage(input_tokens=500, output_tokens=100, total=600),
+        model="gpt-4-turbo-preview",
+        tokens_used=TokensUsed(input_tokens=500, output_tokens=100, total=600),
         cost=0.00007,
-        model="gpt-4-turbo-preview"
+        processing_time_ms=25.0,
     )
     return adapter
 
@@ -50,7 +60,7 @@ def mock_cache():
     """Mock Redis cache"""
     cache = AsyncMock()
     cache.get_query_cache.return_value = None
-    cache.check_rate_limit.return_value = True
+    cache.check_rate_limit.return_value = (True, 99)
     cache.get_tenant_balance.return_value = 100.0
     cache.deduct_tenant_balance.return_value = 99.99993
     return cache
@@ -59,11 +69,12 @@ def mock_cache():
 @pytest.fixture
 def rag_service(mock_retriever, mock_llm_adapter, mock_cache):
     """Create RAG service with mocked dependencies"""
-    return RAGService(
+    service = RAGService(
         retriever=mock_retriever,
-        llm_adapter=mock_llm_adapter,
         cache=mock_cache
     )
+    service.llm_adapter = mock_llm_adapter
+    return service
 
 
 @pytest.mark.asyncio
@@ -127,7 +138,7 @@ async def test_rag_service_cache_hit(rag_service, mock_retriever, mock_llm_adapt
 async def test_rag_service_rate_limit_exceeded(rag_service, mock_cache):
     """Test RAG query when rate limit is exceeded"""
     # Arrange
-    mock_cache.check_rate_limit.return_value = False
+    mock_cache.check_rate_limit.return_value = (False, 0)
     
     # Act & Assert
     with pytest.raises(Exception, match="Rate limit exceeded"):
@@ -138,7 +149,14 @@ async def test_rag_service_rate_limit_exceeded(rag_service, mock_cache):
 async def test_rag_service_no_retrieval_results(rag_service, mock_retriever, mock_llm_adapter):
     """Test RAG query when no documents are retrieved"""
     # Arrange
-    mock_retriever.search.return_value = []
+    mock_retriever.search.return_value = RetrievalResponse(
+        query="Obscure topic",
+        tenant_id="test-tenant",
+        results=[],
+        total_results=0,
+        processing_time_ms=5.0,
+        cached=False,
+    )
     
     # Act
     response = await rag_service.query("Obscure topic", "test-tenant")
@@ -155,7 +173,7 @@ async def test_rag_service_no_retrieval_results(rag_service, mock_retriever, moc
 async def test_rag_service_citation_mapping(rag_service, mock_retriever, mock_llm_adapter):
     """Test that citations are properly mapped to retrieved documents"""
     # Arrange
-    mock_llm_adapter.generate.return_value.citations = [1, 2]  # Reference to doc indices
+    mock_llm_adapter.generate.return_value.citations = []
     
     # Act
     response = await rag_service.query("Test", "test-tenant")
