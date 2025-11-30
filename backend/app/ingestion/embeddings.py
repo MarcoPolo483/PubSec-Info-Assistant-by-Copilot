@@ -1,11 +1,35 @@
-"""Embedding generation with OpenAI and sentence-transformers fallback."""
+"""Embedding generation with OpenAI primary and optional sentence-transformers fallback.
+
+Enterprise-grade considerations:
+- Lazy import of heavy ML dependencies (torch & sentence-transformers) to reduce test/runtime overhead.
+- Optional disabling via env var `SKIP_SENTENCE_TRANSFORMERS` for constrained environments (CI, unit tests on Windows without GPU).
+- Structured retries with exponential backoff.
+"""
 import asyncio
 import logging
+import os
 from typing import Protocol
 
 import openai
 from openai import AsyncOpenAI
-from sentence_transformers import SentenceTransformer
+
+# Defer loading sentence-transformers until actually needed.
+SentenceTransformer = None  # type: ignore
+
+def _load_sentence_transformer() -> None:  # pragma: no cover (import side-effects)
+    global SentenceTransformer
+    if SentenceTransformer is not None:
+        return
+    if os.environ.get("SKIP_SENTENCE_TRANSFORMERS") == "1":
+        return
+    try:
+        from sentence_transformers import SentenceTransformer as _ST  # type: ignore
+        SentenceTransformer = _ST  # type: ignore
+    except Exception as e:  # pragma: no cover
+        # Log but do not raise here; fallback will activate only if requested.
+        logging.getLogger(__name__).warning(
+            f"Sentence-transformers unavailable, fallback disabled: {e}"\
+        )
 
 from ..config import settings
 from .models import Chunk, EmbeddingConfig
@@ -105,9 +129,12 @@ class SentenceTransformerEmbeddingGenerator:
     """Fallback embedding generator using sentence-transformers."""
 
     def __init__(self, model_name: str = "all-MiniLM-L6-v2") -> None:
-        """Initialize sentence-transformers embedding generator."""
+        """Initialize sentence-transformers embedding generator lazily."""
+        _load_sentence_transformer()
         self.model_name = model_name
-        self.model = SentenceTransformer(model_name)
+        if SentenceTransformer is None:
+            raise RuntimeError("sentence-transformers not available (import failed or disabled).")
+        self.model = SentenceTransformer(model_name)  # type: ignore
         logger.info(f"Loaded sentence-transformer model: {model_name}")
 
     async def generate(self, texts: list[str], config: EmbeddingConfig) -> list[list[float]]:

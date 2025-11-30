@@ -1,4 +1,11 @@
-"""Retriever for semantic search with reranking."""
+"""Retriever implementing semantic search with post-filtering.
+
+Enhancements:
+- Applies score threshold filtering locally for consistency even if vector store does not.
+- Enforces result limit after filtering.
+- Sorts results by score descending (stable) for deterministic ordering.
+- Measures processing time.
+"""
 import logging
 import time
 from typing import Any
@@ -41,26 +48,40 @@ class Retriever:
             query_vector = query_embeddings[0]
 
             # Search vector store
-            results = await self.vector_store.search(
+            raw_results = await self.vector_store.search(
                 tenant_id=query.tenant_id,
                 query_vector=query_vector,
-                limit=query.limit,
+                limit=query.limit,  # upstream hint (best-effort)
                 score_threshold=query.score_threshold,
                 filter_conditions=query.filters,
             )
 
-            # Convert to SearchResult models
-            search_results = [
+            # Normalize & convert
+            converted = [
                 SearchResult(
-                    id=str(result["id"]),
-                    score=result["score"],
-                    content=result["content"],
-                    document_id=result["document_id"],
-                    chunk_index=result["chunk_index"],
-                    metadata=result["metadata"],
+                    id=str(r.get("id")),
+                    score=float(r.get("score", 0.0)),
+                    content=r.get("content", ""),
+                    document_id=r.get("document_id"),
+                    chunk_index=r.get("chunk_index", 0),
+                    metadata=r.get("metadata", {}) or {},
                 )
-                for result in results
+                for r in raw_results
             ]
+
+            # Apply local score filtering (>= threshold)
+            if query.score_threshold is not None:
+                filtered = [sr for sr in converted if sr.score >= query.score_threshold]
+            else:
+                filtered = converted
+
+            # Sort by score descending (stable)
+            filtered.sort(key=lambda x: x.score, reverse=True)
+
+            # Apply hard limit
+            limited = filtered[: query.limit] if query.limit else filtered
+
+            search_results = limited
 
             processing_time_ms = (time.time() - start_time) * 1000
 

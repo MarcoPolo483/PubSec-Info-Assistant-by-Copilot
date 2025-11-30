@@ -6,9 +6,10 @@ import pytest
 import pytest_asyncio
 from qdrant_client import AsyncQdrantClient
 
-# Set test environment
-os.environ["ENVIRONMENT"] = "test"
+# Set test environment (must match allowed literals in Settings)
+os.environ["ENVIRONMENT"] = "dev"
 os.environ["SECRET_KEY"] = "test-secret-key-minimum-32-characters-long"
+os.environ["SKIP_SENTENCE_TRANSFORMERS"] = "1"  # Skip heavy torch-dependent import during unit tests for speed/stability
 os.environ["OPENAI_API_KEY"] = "test-openai-api-key"
 
 
