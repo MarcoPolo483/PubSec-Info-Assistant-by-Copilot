@@ -46,6 +46,56 @@ docker-compose up -d
 
 ---
 
+## 🎯 T-Shirt Sizing Guide for Azure
+
+Before choosing a deployment option, understand the **pre-configured t-shirt sizes** for Azure deployments. Each size is optimized for specific use cases with automated deployment scripts.
+
+### Quick Size Selector
+
+| Size | Use Case | Users | Monthly Cost | Setup | SLA |
+|------|----------|-------|--------------|-------|-----|
+| **XS** | Demo/POC | 1-10 | $150-300 | 20 min | 99.5% |
+| **S** | Development | 10-50 | $400-600 | 30 min | 99.9% |
+| **M** | Production | 50-500 | $1,500-2,500 | 45 min | 99.95% |
+| **L** | Multi-Tenant | 500-5000+ | $10,000-15,000 | 60 min | 99.99% |
+
+### Automated Deployment with T-Shirt Sizing
+
+**Example: Deploy Size M (Production) to Azure**
+```powershell
+# Navigate to terraform directory
+cd terraform
+
+# Deploy with automated script (one command!)
+.\scripts\deploy-tshirt.ps1 `
+  -Size M `
+  -Environment production `
+  -Location eastus `
+  -Owner "your.email@example.com" `
+  -OpenAIKey "sk-your-key-here" `
+  -EnableDDoS `
+  -EnablePrivateCluster
+
+# The script automatically:
+# - Creates Terraform state backend
+# - Generates optimized configuration for Size M
+# - Initializes and plans deployment
+# - Provisions all Azure resources (AKS, ACR, Key Vault, etc.)
+# - Provides kubectl commands for next steps
+```
+
+**All Sizes Include**:
+- ✅ Pre-configured VM sizes optimized for workload
+- ✅ Auto-scaling policies tuned for size
+- ✅ Cost-optimized storage and networking
+- ✅ Security settings appropriate for environment
+- ✅ Monitoring and alerting configurations
+- ✅ Disaster recovery settings (M and L sizes)
+
+**📖 Complete Guide**: See [`terraform/TSHIRT-SIZING-GUIDE.md`](terraform/TSHIRT-SIZING-GUIDE.md) for detailed specifications, resource allocations, and decision matrix.
+
+---
+
 ## 🚀 Option 1: Docker Compose (SIMPLEST - RECOMMENDED)
 
 ### Overview
@@ -315,6 +365,42 @@ az account set --subscription "Your-Subscription-Name"
 
 **Simplest Azure deployment with full infrastructure automation**
 
+**Using T-Shirt Sizing (Recommended)**:
+```powershell
+cd terraform
+
+# Deploy Size M (Production) - Fully automated!
+.\scripts\deploy-tshirt.ps1 `
+  -Size M `
+  -Environment production `
+  -Location eastus `
+  -Owner "your.email@example.com" `
+  -OpenAIKey "sk-your-key-here" `
+  -EnablePrivateCluster
+
+# Or deploy Size S (Development)
+.\scripts\deploy-tshirt.ps1 `
+  -Size S `
+  -Environment dev `
+  -Location eastus `
+  -Owner "dev-team@example.com" `
+  -OpenAIKey "sk-your-key-here"
+
+# Preview changes without applying (Dry Run)
+.\scripts\deploy-tshirt.ps1 `
+  -Size M `
+  -Environment production `
+  -DryRun
+
+# The script handles everything:
+# - Terraform state backend creation
+# - Size-optimized configuration
+# - Resource provisioning (AKS, ACR, Key Vault, etc.)
+# - Security settings
+# - Monitoring setup
+```
+
+**Manual Terraform (Advanced)**:
 ```bash
 cd terraform
 
@@ -325,10 +411,8 @@ terraform init \
   -backend-config="container_name=tfstate" \
   -backend-config="key=production.tfstate"
 
-# Review what will be created
+# Deploy with custom tfvars
 terraform plan -var-file="environments/production.tfvars"
-
-# Deploy infrastructure (takes ~18 minutes)
 terraform apply -var-file="environments/production.tfvars"
 
 # Get AKS credentials
@@ -338,6 +422,14 @@ az aks get-credentials \
 
 # Verify deployment
 kubectl get nodes
+```
+
+**T-Shirt Sizing Benefits**:
+- ✅ Pre-configured for your workload (XS, S, M, L)
+- ✅ Automated validation and deployment
+- ✅ Cost-optimized resource allocation
+- ✅ Security settings appropriate for size
+- ✅ Easy upgrades between sizes
 kubectl get pods --all-namespaces
 ```
 
