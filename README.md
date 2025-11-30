@@ -11,6 +11,7 @@
 [![SOC2](https://img.shields.io/badge/SOC2-Type%20II-green.svg)](./docs/compliance/SOC2-COMPLIANCE.md)
 [![Documentation](https://img.shields.io/badge/documentation-complete-brightgreen.svg)](./docs/)
 
+Note: CI trigger metadata bump (2025-11-30) to validate pipelines.
 **Enterprise-grade Public Sector Information Assistant** with Retrieval-Augmented Generation (RAG), multi-tenancy, API management, and world-class compliance (SOC2, FedRAMP, WCAG 2.1 AA).
 
 Built by **autonomous AI agents** following enterprise best practices. Production-ready with 80%+ test coverage, comprehensive security, full observability, and LiveOps capabilities.
