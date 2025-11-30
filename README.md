@@ -12,6 +12,21 @@
 [![Documentation](https://img.shields.io/badge/documentation-complete-brightgreen.svg)](./docs/)
 
 Note: CI trigger metadata bump (2025-11-30) to validate pipelines.
+
+## API Keys & Rate Limits
+
+- Header: `X-API-Key` (optional for public reads; recommended in production)
+- Rate limit: basic per-process sliding window (60s; ~300 reqs/window default)
+- Endpoints tagged in OpenAPI: `system`, `ingestion`, `rag`, `tenant`
+
+## Contract Testing
+
+- Schemathesis runs in CI against `/openapi.json` with core checks
+- Local run:
+
+```bash
+schemathesis run http://localhost:8000/openapi.json --checks all --workers 2
+```
 **Enterprise-grade Public Sector Information Assistant** with Retrieval-Augmented Generation (RAG), multi-tenancy, API management, and world-class compliance (SOC2, FedRAMP, WCAG 2.1 AA).
 
 Built by **autonomous AI agents** following enterprise best practices. Production-ready with 80%+ test coverage, comprehensive security, full observability, and LiveOps capabilities.
