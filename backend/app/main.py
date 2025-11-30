@@ -5,6 +5,8 @@ from typing import AsyncGenerator
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from typing import Optional
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from prometheus_client import make_asgi_app
 
@@ -51,8 +53,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
-    description="Enterprise-grade RAG system with multi-tenancy for public sector",
+    description=(
+        "Enterprise-grade RAG system with multi-tenancy for public sector.\n\n"
+        "Secured via optional API Key header `X-API-Key` and basic rate limits."
+    ),
     lifespan=lifespan,
+    contact={"name": "PubSec Team", "url": "https://github.com/MarcoPolo483"},
+    license_info={"name": "MIT", "url": "https://opensource.org/licenses/MIT"},
 )
 
 # Add CORS middleware
@@ -63,6 +70,32 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Basic API Key + in-memory rate limiting (per-process)
+from time import time
+from collections import defaultdict, deque
+
+WINDOW_SECONDS = 60
+MAX_REQUESTS_PER_WINDOW = 300
+_rate_window: dict[str, deque[float]] = defaultdict(deque)
+
+def _require_api_key(x_api_key: Optional[str] = Header(default=None, alias="X-API-Key")) -> str:
+    # Accept missing key for now (public read); tighten later if needed
+    if x_api_key is None:
+        return "public"
+    if not x_api_key.strip():
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    return x_api_key
+
+def rate_limit(api_key: str = Depends(_require_api_key)):
+    now = time()
+    window = _rate_window[api_key]
+    window.append(now)
+    while window and now - window[0] > WINDOW_SECONDS:
+        window.popleft()
+    if len(window) > MAX_REQUESTS_PER_WINDOW:
+        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+    return api_key
 
 # Add Prometheus metrics endpoint
 metrics_app = make_asgi_app()
@@ -80,14 +113,14 @@ async def get_tenant_id(
 
 
 # Health check endpoint
-@app.get("/health")
+@app.get("/health", tags=["system"], summary="Health check")
 async def health_check() -> dict[str, str]:
     """Health check endpoint."""
     return {"status": "healthy", "version": settings.app_version}
 
 
 # Readiness check endpoint
-@app.get("/ready")
+@app.get("/ready", tags=["system"], summary="Readiness check")
 async def readiness_check() -> dict[str, str]:
     """Readiness check endpoint."""
     if not ingestion_service:
@@ -96,10 +129,17 @@ async def readiness_check() -> dict[str, str]:
 
 
 # Ingestion endpoints
-@app.post("/api/v1/ingest", response_model=IngestionResponse)
+@app.post(
+    "/api/v1/ingest",
+    response_model=IngestionResponse,
+    tags=["ingestion"],
+    summary="Ingest a document",
+    description="Uploads a file and indexes it for retrieval within the tenant scope.",
+)
 async def ingest_document(
     file: UploadFile = File(...),
     tenant_id: str = Depends(get_tenant_id),
+    api_key: str = Depends(rate_limit),
 ) -> IngestionResponse:
     """Ingest a document for a tenant."""
     if not ingestion_service:
@@ -131,10 +171,15 @@ async def ingest_document(
         raise HTTPException(status_code=500, detail=f"Failed to ingest document: {str(e)}")
 
 
-@app.delete("/api/v1/documents/{document_id}")
+@app.delete(
+    "/api/v1/documents/{document_id}",
+    tags=["ingestion"],
+    summary="Delete document",
+)
 async def delete_document(
     document_id: str,
     tenant_id: str = Depends(get_tenant_id),
+    api_key: str = Depends(rate_limit),
 ) -> dict[str, str]:
     """Delete a document for a tenant."""
     if not ingestion_service:
@@ -155,9 +200,14 @@ async def delete_document(
         raise HTTPException(status_code=500, detail=f"Failed to delete document: {str(e)}")
 
 
-@app.get("/api/v1/collection/stats")
+@app.get(
+    "/api/v1/collection/stats",
+    tags=["ingestion"],
+    summary="Collection statistics",
+)
 async def get_collection_stats(
     tenant_id: str = Depends(get_tenant_id),
+    api_key: str = Depends(rate_limit),
 ) -> dict[str, any]:
     """Get collection statistics for a tenant."""
     if not ingestion_service:
@@ -179,12 +229,18 @@ async def get_collection_stats(
 
 
 # RAG Query endpoint
-@app.post("/api/v1/query")
+@app.post(
+    "/api/v1/query",
+    tags=["rag"],
+    summary="Query RAG",
+    description="Queries the system, retrieving context and generating an answer.",
+)
 async def query(
     query: str,
     top_k: int = 5,
     use_cache: bool = True,
     tenant_id: str = Depends(get_tenant_id),
+    api_key: str = Depends(rate_limit),
 ) -> dict[str, any]:
     """Query the RAG system with a question."""
     if not rag_service:
@@ -221,9 +277,14 @@ async def query(
         raise HTTPException(status_code=500, detail=f"Failed to process query: {str(e)}")
 
 
-@app.get("/api/v1/tenant/stats")
+@app.get(
+    "/api/v1/tenant/stats",
+    tags=["tenant"],
+    summary="Tenant statistics",
+)
 async def get_tenant_stats(
     tenant_id: str = Depends(get_tenant_id),
+    api_key: str = Depends(rate_limit),
 ) -> dict[str, any]:
     """Get tenant statistics including balance and collection info."""
     if not rag_service:

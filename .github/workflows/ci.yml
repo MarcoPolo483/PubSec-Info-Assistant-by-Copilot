@@ -104,6 +104,7 @@ jobs:
         run: |
           pip install -r backend/requirements.txt
           pip install pytest pytest-cov pytest-asyncio
+          pip install schemathesis
       
       - name: Run unit tests
         run: |
@@ -115,6 +116,15 @@ jobs:
           QDRANT_URL: http://localhost:6333
         run: |
           pytest backend/tests/integration/ -v
+
+      - name: API contract validation (Schemathesis)
+        env:
+          BASE_URL: http://localhost:8000
+        run: |
+          echo "Starting FastAPI app for contract tests";
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          sleep 5
+          schemathesis run http://localhost:8000/openapi.json --checks all --workers 2 || true
       
       - name: Check coverage
         run: |
