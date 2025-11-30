@@ -1,0 +1,56 @@
+"""Setup configuration for PubSec Info Assistant backend."""
+from setuptools import find_packages, setup
+
+setup(
+    name="pubsec-info-assistant",
+    version="0.1.0",
+    description="Enterprise-grade RAG system with multi-tenancy for public sector",
+    author="AI Agent",
+    author_email="agent@eva-suite.ai",
+    python_requires=">=3.11",
+    packages=find_packages(where="app"),
+    package_dir={"": "app"},
+    install_requires=[
+        "fastapi>=0.115.0",
+        "uvicorn[standard]>=0.31.0",
+        "pydantic>=2.9.0",
+        "pydantic-settings>=2.5.2",
+        "pypdf>=4.3.1",
+        "beautifulsoup4>=4.12.3",
+        "python-docx>=1.1.2",
+        "pytesseract>=0.3.13",
+        "Pillow>=10.4.0",
+        "openai>=1.51.0",
+        "sentence-transformers>=3.2.1",
+        "qdrant-client>=1.12.0",
+        "redis[hiredis]>=5.2.0",
+        "prometheus-client>=0.21.0",
+        "opentelemetry-api>=1.28.1",
+        "opentelemetry-sdk>=1.28.1",
+        "opentelemetry-instrumentation-fastapi>=0.49b1",
+        "python-jose[cryptography]>=3.3.0",
+        "passlib[bcrypt]>=1.7.4",
+        "python-dotenv>=1.0.1",
+    ],
+    extras_require={
+        "dev": [
+            "pytest>=8.3.3",
+            "pytest-asyncio>=0.24.0",
+            "pytest-cov>=5.0.0",
+            "pytest-mock>=3.14.0",
+            "httpx>=0.27.2",
+            "black>=24.10.0",
+            "isort>=5.13.2",
+            "flake8>=7.1.1",
+            "pylint>=3.3.1",
+            "mypy>=1.13.0",
+        ]
+    },
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+    ],
+)
