@@ -11,6 +11,7 @@ from prometheus_client import make_asgi_app
 from .config import settings
 from .ingestion.models import IngestionRequest, IngestionResponse
 from .ingestion.service import IngestionService
+from .rag_service import RAGService
 
 # Configure logging
 logging.basicConfig(
@@ -19,18 +20,20 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Global ingestion service
+# Global services
 ingestion_service: IngestionService | None = None
+rag_service: RAGService | None = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Lifecycle manager for FastAPI app."""
-    global ingestion_service
+    global ingestion_service, rag_service
 
     # Startup
     logger.info("Starting application...")
     ingestion_service = IngestionService()
+    rag_service = RAGService()
     logger.info("Application started successfully")
 
     yield
@@ -39,6 +42,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Shutting down application...")
     if ingestion_service:
         await ingestion_service.close()
+    if rag_service:
+        await rag_service.close()
     logger.info("Application shutdown complete")
 
 
@@ -170,6 +175,72 @@ async def get_collection_stats(
         raise
     except Exception as e:
         logger.error(f"Failed to get collection stats: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")
+
+
+# RAG Query endpoint
+@app.post("/api/v1/query")
+async def query(
+    query: str,
+    top_k: int = 5,
+    use_cache: bool = True,
+    tenant_id: str = Depends(get_tenant_id),
+) -> dict[str, any]:
+    """Query the RAG system with a question."""
+    if not rag_service:
+        raise HTTPException(status_code=503, detail="RAG service not available")
+
+    try:
+        result = await rag_service.query(
+            query=query,
+            tenant_id=tenant_id,
+            use_cache=use_cache,
+            top_k=top_k,
+        )
+
+        # Add cost tracking headers
+        headers = {}
+        if settings.cost_tracking_enabled and "cost" in result:
+            headers["X-Request-Cost"] = f"{result['cost']:.4f}"
+            headers["X-Token-Usage"] = (
+                f"input:{result['tokens_used']['input']},"
+                f"output:{result['tokens_used']['output']}"
+            )
+            if "tenant_balance" in result:
+                headers["X-Tenant-Balance"] = f"balance:{result['tenant_balance']:.2f}"
+
+        return JSONResponse(content=result, headers=headers)
+
+    except ValueError as e:
+        # Rate limit or validation error
+        raise HTTPException(status_code=429, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to process query: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to process query: {str(e)}")
+
+
+@app.get("/api/v1/tenant/stats")
+async def get_tenant_stats(
+    tenant_id: str = Depends(get_tenant_id),
+) -> dict[str, any]:
+    """Get tenant statistics including balance and collection info."""
+    if not rag_service:
+        raise HTTPException(status_code=503, detail="RAG service not available")
+
+    try:
+        stats = await rag_service.get_tenant_stats(tenant_id)
+
+        if "error" in stats:
+            raise HTTPException(status_code=500, detail=stats["error"])
+
+        return stats
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get tenant stats: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")
 
 
