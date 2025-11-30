@@ -21,16 +21,138 @@ permissions:
   contents: read
   deployments: write
   packages: write
+  id-token: write  # Required for Azure OIDC authentication
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME_BACKEND: ${{ github.repository }}/backend
   IMAGE_NAME_FRONTEND: ${{ github.repository }}/frontend
+  TERRAFORM_VERSION: 1.6.0
 
 jobs:
+  terraform-plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    outputs:
+      plan-exitcode: ${{ steps.plan.outputs.exitcode }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+      
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: Terraform Init
+        run: |
+          cd terraform
+          terraform init \
+            -backend-config="resource_group_name=${{ secrets.TERRAFORM_STATE_RG }}" \
+            -backend-config="storage_account_name=${{ secrets.TERRAFORM_STATE_SA }}" \
+            -backend-config="container_name=tfstate" \
+            -backend-config="key=${{ github.event.inputs.environment }}.tfstate"
+      
+      - name: Terraform Format Check
+        run: |
+          cd terraform
+          terraform fmt -check -recursive
+      
+      - name: Terraform Validate
+        run: |
+          cd terraform
+          terraform validate
+      
+      - name: Terraform Plan
+        id: plan
+        run: |
+          cd terraform
+          terraform plan \
+            -var-file="environments/${{ github.event.inputs.environment }}.tfvars" \
+            -var="openai_api_key=${{ secrets.OPENAI_API_KEY }}" \
+            -out=tfplan \
+            -detailed-exitcode || echo "exitcode=$?" >> $GITHUB_OUTPUT
+      
+      - name: Upload Terraform Plan
+        uses: actions/upload-artifact@v3
+        with:
+          name: tfplan
+          path: terraform/tfplan
+          retention-days: 5
+  
+  terraform-apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+    if: needs.terraform-plan.outputs.plan-exitcode == '2'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+      
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: Download Terraform Plan
+        uses: actions/download-artifact@v3
+        with:
+          name: tfplan
+          path: terraform/
+      
+      - name: Terraform Init
+        run: |
+          cd terraform
+          terraform init \
+            -backend-config="resource_group_name=${{ secrets.TERRAFORM_STATE_RG }}" \
+            -backend-config="storage_account_name=${{ secrets.TERRAFORM_STATE_SA }}" \
+            -backend-config="container_name=tfstate" \
+            -backend-config="key=${{ github.event.inputs.environment }}.tfstate"
+      
+      - name: Terraform Apply
+        run: |
+          cd terraform
+          terraform apply -auto-approve tfplan
+      
+      - name: Get AKS Credentials
+        run: |
+          RESOURCE_GROUP=$(cd terraform && terraform output -raw resource_group_name)
+          AKS_NAME=$(cd terraform && terraform output -raw aks_cluster_name)
+          az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_NAME --overwrite-existing
+      
+      - name: Export Terraform Outputs
+        run: |
+          cd terraform
+          terraform output -json > ../terraform-outputs.json
+      
+      - name: Upload Terraform Outputs
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-outputs
+          path: terraform-outputs.json
+          retention-days: 30
+
+
   build-and-push:
     name: Build and Push Images
     runs-on: ubuntu-latest
+    needs: [terraform-plan]
     outputs:
       backend-image: ${{ steps.meta-backend.outputs.tags }}
       frontend-image: ${{ steps.meta-frontend.outputs.tags }}
@@ -95,7 +217,7 @@ jobs:
   deploy-dev:
     name: Deploy to Development
     runs-on: ubuntu-latest
-    needs: build-and-push
+    needs: [terraform-apply, build-and-push]
     if: github.event.inputs.environment == 'dev'
     environment:
       name: dev
@@ -105,13 +227,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Deploy to dev environment
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: Download Terraform Outputs
+        uses: actions/download-artifact@v3
+        with:
+          name: terraform-outputs
+      
+      - name: Get AKS Credentials
         run: |
-          echo "Deploying to dev environment..."
-          echo "Backend image: ${{ needs.build-and-push.outputs.backend-image }}"
-          echo "Frontend image: ${{ needs.build-and-push.outputs.frontend-image }}"
-          # In real scenario, would use kubectl, helm, or cloud-specific tools
-          # Example: kubectl set image deployment/backend backend=${{ needs.build-and-push.outputs.backend-image }}
+          RESOURCE_GROUP=$(jq -r '.outputs_summary.value.resource_group.name' terraform-outputs.json)
+          AKS_NAME=$(jq -r '.outputs_summary.value.aks.cluster_name' terraform-outputs.json)
+          az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_NAME --overwrite-existing
+      
+      - name: Deploy to Kubernetes
+        run: |
+          # Update image references in k8s manifests
+          kubectl set image deployment/backend backend=${{ needs.build-and-push.outputs.backend-image }} -n dev
+          kubectl set image deployment/frontend frontend=${{ needs.build-and-push.outputs.frontend-image }} -n dev
+          
+          # Wait for rollout
+          kubectl rollout status deployment/backend -n dev --timeout=5m
+          kubectl rollout status deployment/frontend -n dev --timeout=5m
       
       - name: Run smoke tests
         run: |
@@ -131,7 +273,7 @@ jobs:
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
-    needs: build-and-push
+    needs: [terraform-apply, build-and-push]
     if: github.event.inputs.environment == 'staging'
     environment:
       name: staging
@@ -141,17 +283,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Deploy to staging environment
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: Download Terraform Outputs
+        uses: actions/download-artifact@v3
+        with:
+          name: terraform-outputs
+      
+      - name: Get AKS Credentials
         run: |
-          echo "Deploying to staging environment..."
-          echo "Backend image: ${{ needs.build-and-push.outputs.backend-image }}"
-          echo "Frontend image: ${{ needs.build-and-push.outputs.frontend-image }}"
-          # Example Kubernetes deployment:
-          # kubectl apply -f k8s/overlays/staging/
-          # kubectl set image deployment/backend backend=${{ needs.build-and-push.outputs.backend-image }} -n staging
-          # kubectl set image deployment/frontend frontend=${{ needs.build-and-push.outputs.frontend-image }} -n staging
-          # kubectl rollout status deployment/backend -n staging
-          # kubectl rollout status deployment/frontend -n staging
+          RESOURCE_GROUP=$(jq -r '.outputs_summary.value.resource_group.name' terraform-outputs.json)
+          AKS_NAME=$(jq -r '.outputs_summary.value.aks.cluster_name' terraform-outputs.json)
+          az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_NAME --overwrite-existing
+      
+      - name: Deploy to Kubernetes
+        run: |
+          # Apply k8s manifests
+          kubectl apply -k k8s/base -n staging
+          
+          # Update images
+          kubectl set image deployment/backend backend=${{ needs.build-and-push.outputs.backend-image }} -n staging
+          kubectl set image deployment/frontend frontend=${{ needs.build-and-push.outputs.frontend-image }} -n staging
+          
+          # Wait for rollout
+          kubectl rollout status deployment/backend -n staging --timeout=10m
+          kubectl rollout status deployment/frontend -n staging --timeout=10m
       
       - name: Run integration tests
         if: ${{ !inputs.skip_tests }}
@@ -186,7 +347,7 @@ jobs:
   deploy-production:
     name: Deploy to Production (Canary)
     runs-on: ubuntu-latest
-    needs: build-and-push
+    needs: [terraform-apply, build-and-push]
     if: github.event.inputs.environment == 'production'
     environment:
       name: production
@@ -195,6 +356,24 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: Download Terraform Outputs
+        uses: actions/download-artifact@v3
+        with:
+          name: terraform-outputs
+      
+      - name: Get AKS Credentials
+        run: |
+          RESOURCE_GROUP=$(jq -r '.outputs_summary.value.resource_group.name' terraform-outputs.json)
+          AKS_NAME=$(jq -r '.outputs_summary.value.aks.cluster_name' terraform-outputs.json)
+          az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_NAME --overwrite-existing
       
       - name: Deploy canary (1%)
         run: |
