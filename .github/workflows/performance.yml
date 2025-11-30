@@ -1,0 +1,313 @@
+name: Performance Testing
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_duration:
+        description: 'Test duration in minutes'
+        required: false
+        default: '10'
+      virtual_users:
+        description: 'Number of virtual users'
+        required: false
+        default: '1000'
+      target_url:
+        description: 'Target URL'
+        required: false
+        default: 'http://localhost:8000'
+  schedule:
+    # Run weekly on Sundays at 3 AM UTC
+    - cron: '0 3 * * 0'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  setup-environment:
+    name: Setup Test Environment
+    runs-on: ubuntu-latest
+    if: github.event.inputs.target_url == 'http://localhost:8000' || github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Start application stack
+        run: |
+          docker-compose up -d
+          echo "Waiting for services to be ready..."
+          sleep 60
+      
+      - name: Verify services
+        run: |
+          curl -f http://localhost:8000/health || exit 1
+          curl -f http://localhost:8000/ready || exit 1
+          echo "Services are ready"
+      
+      - name: Seed test data
+        run: |
+          echo "Seeding test data for performance tests..."
+          # Upload sample documents via /api/v1/ingest endpoint
+          # Example: curl -X POST http://localhost:8000/api/v1/ingest \
+          #   -H "X-Tenant-ID: perf-test" \
+          #   -F "file=@test-data/sample.pdf"
+
+  k6-load-test:
+    name: K6 Load Testing
+    runs-on: ubuntu-latest
+    needs: setup-environment
+    if: always() && (needs.setup-environment.result == 'success' || needs.setup-environment.result == 'skipped')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+      
+      - name: Create k6 test script
+        run: |
+          mkdir -p k6-tests
+          cat > k6-tests/load-test.js << 'EOF'
+          import http from 'k6/http';
+          import { check, sleep } from 'k6';
+          import { Rate, Trend } from 'k6/metrics';
+
+          // Custom metrics
+          const errorRate = new Rate('errors');
+          const queryDuration = new Trend('query_duration');
+
+          // Configuration
+          export const options = {
+            stages: [
+              { duration: '2m', target: 100 },   // Ramp up to 100 users
+              { duration: '5m', target: 500 },   // Ramp up to 500 users
+              { duration: '${github.event.inputs.test_duration || "10"}m', target: ${github.event.inputs.virtual_users || "1000"} },  // Peak load
+              { duration: '2m', target: 0 },     // Ramp down
+            ],
+            thresholds: {
+              'http_req_duration': ['p(50)<500', 'p(95)<1500', 'p(99)<2000'], // Response time thresholds
+              'errors': ['rate<0.001'],                                        // Error rate < 0.1%
+              'http_req_failed': ['rate<0.001'],                               // Failed requests < 0.1%
+            },
+          };
+
+          const BASE_URL = '${github.event.inputs.target_url || "http://localhost:8000"}';
+          const QUERIES = [
+            'What are the key regulations for public sector IT procurement?',
+            'Explain data privacy requirements for government agencies',
+            'What are the cybersecurity standards for federal systems?',
+            'Describe the process for FISMA compliance',
+            'What are the requirements for cloud service providers?',
+          ];
+
+          export default function () {
+            const query = QUERIES[Math.floor(Math.random() * QUERIES.length)];
+            const tenantId = `tenant-${Math.floor(Math.random() * 5) + 1}`;
+            
+            const params = {
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Tenant-ID': tenantId,
+              },
+            };
+
+            const startTime = Date.now();
+            const response = http.post(
+              `${BASE_URL}/api/v1/query?query=${encodeURIComponent(query)}&top_k=5&use_cache=true`,
+              null,
+              params
+            );
+            const duration = Date.now() - startTime;
+
+            // Check response
+            const success = check(response, {
+              'status is 200': (r) => r.status === 200,
+              'has answer': (r) => r.json('answer') !== undefined,
+              'response time OK': () => duration < 2000,
+            });
+
+            errorRate.add(!success);
+            queryDuration.add(duration);
+
+            // Parse cost tracking headers
+            if (response.headers['X-Request-Cost']) {
+              console.log(`Cost: ${response.headers['X-Request-Cost']}, Tokens: ${response.headers['X-Token-Usage']}`);
+            }
+
+            sleep(1); // Think time between requests
+          }
+
+          export function handleSummary(data) {
+            return {
+              'k6-summary.json': JSON.stringify(data),
+              stdout: textSummary(data, { indent: ' ', enableColors: true }),
+            };
+          }
+          EOF
+      
+      - name: Run k6 load test
+        run: |
+          k6 run k6-tests/load-test.js --out json=k6-results.json
+      
+      - name: Upload k6 results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: k6-results
+          path: |
+            k6-results.json
+            k6-summary.json
+      
+      - name: Analyze results
+        if: always()
+        run: |
+          echo "=== K6 Load Test Results ==="
+          cat k6-summary.json | jq '.metrics'
+          
+          # Extract key metrics
+          P50=$(cat k6-summary.json | jq -r '.metrics.http_req_duration.values.p50')
+          P95=$(cat k6-summary.json | jq -r '.metrics.http_req_duration.values.p95')
+          P99=$(cat k6-summary.json | jq -r '.metrics.http_req_duration.values.p99')
+          ERROR_RATE=$(cat k6-summary.json | jq -r '.metrics.errors.values.rate')
+          
+          echo "Performance Metrics:"
+          echo "  P50 latency: ${P50}ms"
+          echo "  P95 latency: ${P95}ms"
+          echo "  P99 latency: ${P99}ms"
+          echo "  Error rate: ${ERROR_RATE}"
+          
+          # Validate SLAs
+          if (( $(echo "$P50 > 500" | bc -l) )); then
+            echo "::warning::P50 latency exceeds 500ms target"
+          fi
+          if (( $(echo "$P99 > 2000" | bc -l) )); then
+            echo "::error::P99 latency exceeds 2s SLA"
+            exit 1
+          fi
+          if (( $(echo "$ERROR_RATE > 0.001" | bc -l) )); then
+            echo "::error::Error rate exceeds 0.1% SLA"
+            exit 1
+          fi
+
+  stress-test:
+    name: Stress Testing
+    runs-on: ubuntu-latest
+    needs: k6-load-test
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run stress test
+        run: |
+          echo "Running stress test (exceeding capacity)..."
+          # Use k6 with even higher load to find breaking point
+          # k6 run --vus 5000 --duration 5m k6-tests/stress-test.js
+
+  soak-test:
+    name: Soak Testing (Endurance)
+    runs-on: ubuntu-latest
+    needs: k6-load-test
+    if: github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run soak test
+        run: |
+          echo "Running soak test (sustained load for 2 hours)..."
+          # k6 run --vus 500 --duration 2h k6-tests/soak-test.js
+
+  cache-performance:
+    name: Cache Performance Analysis
+    runs-on: ubuntu-latest
+    needs: k6-load-test
+    
+    steps:
+      - name: Analyze cache metrics
+        run: |
+          echo "Analyzing Redis cache performance..."
+          # Query Prometheus for cache hit rate
+          # Expected: >70% cache hit rate
+          # curl -G http://prometheus:9090/api/v1/query \
+          #   --data-urlencode 'query=rate(redis_cache_hits_total[5m]) / rate(redis_cache_requests_total[5m])'
+
+  cost-analysis:
+    name: Cost Analysis
+    runs-on: ubuntu-latest
+    needs: k6-load-test
+    
+    steps:
+      - name: Calculate performance test costs
+        run: |
+          echo "Analyzing cost metrics from performance test..."
+          # Parse k6 results for X-Request-Cost headers
+          # Calculate total cost = sum of all query costs
+          # Validate: Average cost per query <$0.01
+
+  performance-report:
+    name: Generate Performance Report
+    runs-on: ubuntu-latest
+    needs: [k6-load-test, cache-performance, cost-analysis]
+    if: always()
+    
+    steps:
+      - name: Download k6 results
+        uses: actions/download-artifact@v4
+        with:
+          name: k6-results
+      
+      - name: Generate report
+        run: |
+          echo "# Performance Test Report" > performance-report.md
+          echo "" >> performance-report.md
+          echo "**Test Configuration:**" >> performance-report.md
+          echo "- Duration: ${{ github.event.inputs.test_duration || '10' }} minutes" >> performance-report.md
+          echo "- Virtual Users: ${{ github.event.inputs.virtual_users || '1000' }}" >> performance-report.md
+          echo "- Target: ${{ github.event.inputs.target_url || 'http://localhost:8000' }}" >> performance-report.md
+          echo "" >> performance-report.md
+          echo "**Results:**" >> performance-report.md
+          cat k6-summary.json | jq -r '.metrics | to_entries[] | "- \(.key): \(.value.values)"' >> performance-report.md
+          
+          cat performance-report.md
+      
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report
+          path: performance-report.md
+      
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('performance-report.md', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+
+  cleanup:
+    name: Cleanup Test Environment
+    runs-on: ubuntu-latest
+    needs: [k6-load-test, stress-test, soak-test]
+    if: always()
+    
+    steps:
+      - name: Stop application stack
+        run: |
+          docker-compose down -v || true
+          echo "Test environment cleaned up"

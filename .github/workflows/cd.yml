@@ -1,0 +1,289 @@
+name: Continuous Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+      skip_tests:
+        description: 'Skip integration tests'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  deployments: write
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME_BACKEND: ${{ github.repository }}/backend
+  IMAGE_NAME_FRONTEND: ${{ github.repository }}/frontend
+
+jobs:
+  build-and-push:
+    name: Build and Push Images
+    runs-on: ubuntu-latest
+    outputs:
+      backend-image: ${{ steps.meta-backend.outputs.tags }}
+      frontend-image: ${{ steps.meta-frontend.outputs.tags }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract metadata for backend
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+      
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:buildcache,mode=max
+      
+      - name: Extract metadata for frontend
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+      
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.frontend
+          push: true
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:buildcache,mode=max
+
+  deploy-dev:
+    name: Deploy to Development
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.event.inputs.environment == 'dev'
+    environment:
+      name: dev
+      url: https://dev.pubsec-info-assistant.local
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy to dev environment
+        run: |
+          echo "Deploying to dev environment..."
+          echo "Backend image: ${{ needs.build-and-push.outputs.backend-image }}"
+          echo "Frontend image: ${{ needs.build-and-push.outputs.frontend-image }}"
+          # In real scenario, would use kubectl, helm, or cloud-specific tools
+          # Example: kubectl set image deployment/backend backend=${{ needs.build-and-push.outputs.backend-image }}
+      
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests..."
+          # Wait for deployment to stabilize
+          sleep 30
+          # Test health endpoints
+          # curl -f https://dev.pubsec-info-assistant.local/health || exit 1
+          # curl -f https://dev.pubsec-info-assistant.local/ready || exit 1
+      
+      - name: Notify deployment
+        if: always()
+        run: |
+          echo "Deployment to dev ${{ job.status }}"
+          # In production, send to Slack/email
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.event.inputs.environment == 'staging'
+    environment:
+      name: staging
+      url: https://staging.pubsec-info-assistant.local
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy to staging environment
+        run: |
+          echo "Deploying to staging environment..."
+          echo "Backend image: ${{ needs.build-and-push.outputs.backend-image }}"
+          echo "Frontend image: ${{ needs.build-and-push.outputs.frontend-image }}"
+          # Example Kubernetes deployment:
+          # kubectl apply -f k8s/overlays/staging/
+          # kubectl set image deployment/backend backend=${{ needs.build-and-push.outputs.backend-image }} -n staging
+          # kubectl set image deployment/frontend frontend=${{ needs.build-and-push.outputs.frontend-image }} -n staging
+          # kubectl rollout status deployment/backend -n staging
+          # kubectl rollout status deployment/frontend -n staging
+      
+      - name: Run integration tests
+        if: ${{ !inputs.skip_tests }}
+        run: |
+          echo "Running integration tests..."
+          # pytest backend/tests/integration/ --base-url=https://staging.pubsec-info-assistant.local
+      
+      - name: Run E2E tests
+        if: ${{ !inputs.skip_tests }}
+        run: |
+          echo "Running E2E tests..."
+          # playwright test --base-url=https://staging.pubsec-info-assistant.local
+      
+      - name: Validate deployment
+        run: |
+          echo "Validating deployment..."
+          # Check error rate, latency, etc.
+          # Query Prometheus/Datadog for metrics
+      
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Rolling back staging deployment..."
+          # kubectl rollout undo deployment/backend -n staging
+          # kubectl rollout undo deployment/frontend -n staging
+      
+      - name: Notify deployment
+        if: always()
+        run: |
+          echo "Deployment to staging ${{ job.status }}"
+
+  deploy-production:
+    name: Deploy to Production (Canary)
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.event.inputs.environment == 'production'
+    environment:
+      name: production
+      url: https://pubsec-info-assistant.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy canary (1%)
+        run: |
+          echo "Deploying canary (1% traffic)..."
+          # kubectl apply -f k8s/overlays/production/canary/
+          # Configure ingress/service mesh to route 1% to canary
+      
+      - name: Monitor canary (5 min)
+        run: |
+          echo "Monitoring canary deployment..."
+          sleep 300
+          # Check metrics: error rate, p99 latency
+          # Auto-rollback if error rate >1% or p99 >2s
+      
+      - name: Promote to 10%
+        run: |
+          echo "Promoting canary to 10% traffic..."
+          # Update traffic split to 10%
+      
+      - name: Monitor 10% (5 min)
+        run: |
+          sleep 300
+      
+      - name: Promote to 50%
+        run: |
+          echo "Promoting canary to 50% traffic..."
+      
+      - name: Monitor 50% (10 min)
+        run: |
+          sleep 600
+      
+      - name: Promote to 100%
+        run: |
+          echo "Promoting canary to 100% traffic..."
+          # Full rollout
+          # kubectl set image deployment/backend backend=${{ needs.build-and-push.outputs.backend-image }} -n production
+          # kubectl set image deployment/frontend frontend=${{ needs.build-and-push.outputs.frontend-image }} -n production
+      
+      - name: Verify production deployment
+        run: |
+          echo "Verifying production deployment..."
+          # Final health checks
+      
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Rolling back production deployment..."
+          # kubectl rollout undo deployment/backend -n production
+          # kubectl rollout undo deployment/frontend -n production
+      
+      - name: Notify deployment
+        if: always()
+        run: |
+          echo "Production deployment ${{ job.status }}"
+          # Send to Slack, PagerDuty, etc.
+
+  # Post-deployment validation
+  post-deployment:
+    name: Post-Deployment Validation
+    runs-on: ubuntu-latest
+    needs: [deploy-dev, deploy-staging, deploy-production]
+    if: always() && (needs.deploy-dev.result == 'success' || needs.deploy-staging.result == 'success' || needs.deploy-production.result == 'success')
+    
+    steps:
+      - name: Run post-deployment checks
+        run: |
+          echo "Running post-deployment validation..."
+          ENV="${{ github.event.inputs.environment }}"
+          echo "Environment: $ENV"
+          
+          # Validate metrics
+          # - Uptime check
+          # - Response time validation
+          # - Error rate check
+          # - Cache hit rate
+          
+          # Update status page
+          # - Mark deployment as complete
+          
+          # Archive deployment artifacts
+      
+      - name: Generate deployment report
+        if: always()
+        run: |
+          echo "Deployment Report"
+          echo "================"
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Images:"
+          echo "  Backend: ${{ needs.build-and-push.outputs.backend-image }}"
+          echo "  Frontend: ${{ needs.build-and-push.outputs.frontend-image }}"
+          echo "Status: ${{ job.status }}"

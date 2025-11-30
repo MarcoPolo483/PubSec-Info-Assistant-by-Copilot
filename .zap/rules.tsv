@@ -1,0 +1,19 @@
+# OWASP ZAP Rules Configuration
+# This file defines custom rules for OWASP ZAP baseline scans
+
+# Ignore test/development endpoints
+10010	IGNORE	(Test API)
+10011	IGNORE	(Development Tools)
+
+# Adjust risk levels for known false positives
+# Format: RULE_ID	ACTION	(DESCRIPTION)
+# Actions: IGNORE, INFO, WARN, FAIL
+
+# Content Security Policy
+10038	WARN	(Content Security Policy Header Not Set)
+
+# X-Frame-Options
+10020	FAIL	(X-Frame-Options Header Not Set)
+
+# X-Content-Type-Options
+10021	FAIL	(X-Content-Type-Options Header Not Set)
