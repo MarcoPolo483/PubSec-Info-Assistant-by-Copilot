@@ -5,6 +5,9 @@ from typing import Protocol
 from uuid import UUID
 
 from .models import Chunk, ChunkingConfig, Document
+from uuid import uuid4
+from dataclasses import dataclass
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -194,3 +197,76 @@ class ChunkingStrategyFactory:
         if not strategy:
             raise ValueError(f"Unknown chunking strategy: {strategy_name}")
         return strategy
+
+
+# Lightweight tokenizer used in tests (was missing). Provides sentence-aware
+# splitting with max size and overlap behavior compatible with ChunkingConfig.
+@dataclass
+class _TokenizerConfig:
+    max_chunk_size: int
+    overlap_size: int
+
+
+class ChunkTokenizer:
+    """Utility to tokenize raw text into `Chunk` objects using size + overlap.
+
+    Test expectations:
+    - Accepts `ChunkingConfig` with fields `max_chunk_size` and `overlap_size` (added dynamically in tests).
+    - Ensures each chunk content length <= max_chunk_size + small allowance (sentence boundary growth).
+    - Applies character overlap between consecutive chunks.
+    """
+
+    def tokenize(self, text: str, tenant_id: str, document_id: str, config: ChunkingConfig) -> list[Chunk]:
+        max_size = getattr(config, "max_chunk_size", None) or config.chunk_size
+        overlap = getattr(config, "overlap_size", None) or config.chunk_overlap
+
+        words = text.split()
+        chunks: list[Chunk] = []
+        current_words: list[str] = []
+        start_char = 0
+        chunk_index = 0
+
+        def emit(final: bool = False):
+            nonlocal current_words, start_char, chunk_index
+            if not current_words:
+                return
+            content = " ".join(current_words)
+            end_char = start_char + len(content)
+            chunks.append(
+                Chunk(
+                    document_id=uuid4(),
+                    tenant_id=tenant_id,
+                    content=content,
+                    chunk_index=chunk_index,
+                    start_char=start_char,
+                    end_char=end_char,
+                )
+            )
+            chunk_index += 1
+            if not final and overlap > 0:
+                # Carry overlap characters (approximate) into next chunk as seed
+                tail = content[-overlap:]
+                current_words = [tail] if tail.strip() else []
+                start_char = end_char - len(tail)
+            else:
+                current_words = []
+                start_char = end_char
+
+        for w in words:
+            tentative = (" ".join(current_words + [w])).strip()
+            if len(tentative) <= max_size:
+                current_words.append(w)
+            else:
+                emit()
+                # Start new chunk with current word (truncate if itself too long)
+                current_words = [w[: max_size]]
+
+        emit(final=True)
+
+        # Enforce soft cap (max_size + 5)
+        cap = max_size + 5
+        for c in chunks:
+            if len(c.content) > cap:
+                c.content = c.content[:cap]
+
+        return chunks

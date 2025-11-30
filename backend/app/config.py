@@ -27,7 +27,11 @@ class Settings(BaseSettings):
     secret_key: str = Field(..., min_length=32)
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
-    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:8000"]
+    cors_origins: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "http://localhost:5173",  # Added to support local Vite dev & contract tests
+    ]
 
     # Multi-Tenancy
     tenant_header_name: str = "X-Tenant-ID"

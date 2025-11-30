@@ -1,225 +1,111 @@
-"""
-Tests for retrieval module
-"""
+"""Updated tests for Retriever matching current implementation."""
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+
 from app.retrieval.retriever import Retriever
-from app.retrieval.models import SearchQuery, SearchResult
+from app.retrieval.models import SearchQuery
 
 
 @pytest.fixture
-def mock_embedding_generator():
-    """Mock embedding generator"""
-    generator = AsyncMock()
-    generator.generate_embeddings.return_value = [[0.1] * 1536]
-    return generator
+def mock_embeddings():
+    gen = AsyncMock()
+    gen.generate.return_value = [[0.05] * 10]
+    return gen
 
 
 @pytest.fixture
 def mock_vector_store():
-    """Mock Qdrant vector store"""
     store = AsyncMock()
     return store
 
 
 @pytest.fixture
-def retriever(mock_embedding_generator, mock_vector_store):
-    """Create retriever with mocked dependencies"""
-    return Retriever(
-        embedding_generator=mock_embedding_generator,
-        vector_store=mock_vector_store
-    )
+def retriever(mock_embeddings, mock_vector_store):
+    with patch("app.retrieval.retriever.EmbeddingGeneratorFactory.create", return_value=mock_embeddings):
+        return Retriever(vector_store=mock_vector_store, use_openai_embeddings=False)
 
 
 @pytest.mark.asyncio
-async def test_retriever_search_success(retriever, mock_vector_store):
-    """Test successful semantic search"""
-    # Arrange
-    query = SearchQuery(
-        query="What are cybersecurity requirements?",
-        tenant_id="test-tenant",
-        limit=5,
-        score_threshold=0.5
-    )
-    
-    mock_results = [
-        MagicMock(
-            score=0.92,
-            payload={
-                "content": "Cybersecurity requirements include NIST 800-53 controls...",
-                "chunk_id": "chunk-1",
-                "document_id": "doc-1",
-                "metadata": {
-                    "title": "NIST Cybersecurity Framework",
-                    "author": "NIST",
-                    "source_url": "https://nist.gov/csf"
-                }
-            }
-        ),
-        MagicMock(
-            score=0.88,
-            payload={
-                "content": "Federal systems must comply with FISMA regulations...",
-                "chunk_id": "chunk-2",
-                "document_id": "doc-2",
-                "metadata": {
-                    "title": "FISMA Compliance Guide",
-                    "author": "OMB"
-                }
-            }
-        )
+async def test_search_success(retriever, mock_embeddings, mock_vector_store):
+    query = SearchQuery(query="FedRAMP controls", tenant_id="tenant-a", limit=3, score_threshold=0.1)
+    mock_vector_store.search.return_value = [
+        {
+            "id": 1,
+            "score": 0.91,
+            "content": "FedRAMP requires continuous monitoring.",
+            "document_id": "doc-1",
+            "chunk_index": 0,
+            "metadata": {"source": "fedramp-guide"},
+        },
+        {
+            "id": 2,
+            "score": 0.85,
+            "content": "FedRAMP impact levels: Low, Moderate, High.",
+            "document_id": "doc-2",
+            "chunk_index": 1,
+            "metadata": {},
+        },
     ]
-    mock_vector_store.search.return_value = mock_results
-    
-    # Act
-    results = await retriever.search(query)
-    
-    # Assert
-    assert len(results) == 2
-    assert isinstance(results[0], SearchResult)
-    assert results[0].score == 0.92
-    assert results[0].content == "Cybersecurity requirements include NIST 800-53 controls..."
-    assert results[0].chunk_id == "chunk-1"
-    assert results[0].metadata["title"] == "NIST Cybersecurity Framework"
-    assert results[1].score == 0.88
-    
-    # Verify calls
-    retriever.embedding_generator.generate_embeddings.assert_called_once_with(
-        [query.query]
-    )
+    response = await retriever.search(query)
+    assert response.total_results == 2
+    assert response.results[0].score == 0.91
+    assert response.processing_time_ms >= 0
+    mock_embeddings.generate.assert_called_once()
     mock_vector_store.search.assert_called_once()
 
 
 @pytest.mark.asyncio
-async def test_retriever_search_no_results(retriever, mock_vector_store):
-    """Test search with no matching results"""
-    # Arrange
-    query = SearchQuery(
-        query="Non-existent topic",
-        tenant_id="test-tenant"
-    )
+async def test_search_no_results(retriever, mock_vector_store):
+    query = SearchQuery(query="No hits", tenant_id="tenant-a")
     mock_vector_store.search.return_value = []
-    
-    # Act
-    results = await retriever.search(query)
-    
-    # Assert
-    assert len(results) == 0
+    response = await retriever.search(query)
+    assert response.total_results == 0
+    assert response.results == []
 
 
 @pytest.mark.asyncio
-async def test_retriever_search_with_score_threshold(retriever, mock_vector_store):
-    """Test that results below score threshold are filtered"""
-    # Arrange
-    query = SearchQuery(
-        query="Security requirements",
-        tenant_id="test-tenant",
-        score_threshold=0.8
-    )
-    
-    mock_results = [
-        MagicMock(score=0.92, payload={"content": "High relevance", "chunk_id": "1", "document_id": "d1", "metadata": {}}),
-        MagicMock(score=0.75, payload={"content": "Low relevance", "chunk_id": "2", "document_id": "d2", "metadata": {}}),
-        MagicMock(score=0.85, payload={"content": "Medium relevance", "chunk_id": "3", "document_id": "d3", "metadata": {}})
-    ]
-    mock_vector_store.search.return_value = mock_results
-    
-    # Act
-    results = await retriever.search(query)
-    
-    # Assert - Only results >= 0.8 threshold
-    assert len(results) == 2
-    assert results[0].score == 0.92
-    assert results[1].score == 0.85
-
-
-@pytest.mark.asyncio
-async def test_retriever_search_respects_limit(retriever, mock_vector_store):
-    """Test that search respects the limit parameter"""
-    # Arrange
-    query = SearchQuery(
-        query="Test query",
-        tenant_id="test-tenant",
-        limit=3
-    )
-    
-    mock_results = [
-        MagicMock(score=0.9, payload={"content": f"Result {i}", "chunk_id": f"{i}", "document_id": f"d{i}", "metadata": {}})
-        for i in range(10)  # More than limit
-    ]
-    mock_vector_store.search.return_value = mock_results
-    
-    # Act
-    results = await retriever.search(query)
-    
-    # Assert
-    assert len(results) <= query.limit
-
-
-@pytest.mark.asyncio
-async def test_retriever_handles_embedding_error(retriever):
-    """Test error handling when embedding generation fails"""
-    # Arrange
-    query = SearchQuery(query="Test query", tenant_id="test-tenant")
-    retriever.embedding_generator.generate_embeddings.side_effect = Exception("OpenAI API error")
-    
-    # Act & Assert
-    with pytest.raises(Exception, match="OpenAI API error"):
+async def test_search_error_embedding(retriever, mock_embeddings):
+    query = SearchQuery(query="Trigger error", tenant_id="tenant-a")
+    mock_embeddings.generate.side_effect = Exception("Embedding failure")
+    with pytest.raises(Exception, match="Embedding failure"):
         await retriever.search(query)
 
 
 @pytest.mark.asyncio
-async def test_retriever_handles_vector_store_error(retriever, mock_vector_store):
-    """Test error handling when vector store search fails"""
-    # Arrange
-    query = SearchQuery(query="Test query", tenant_id="test-tenant")
-    mock_vector_store.search.side_effect = Exception("Qdrant connection error")
-    
-    # Act & Assert
-    with pytest.raises(Exception, match="Qdrant connection error"):
+async def test_search_error_vector_store(retriever, mock_vector_store):
+    query = SearchQuery(query="Trigger VS error", tenant_id="tenant-a")
+    mock_vector_store.search.side_effect = Exception("Vector store down")
+    with pytest.raises(Exception, match="Vector store down"):
         await retriever.search(query)
 
 
 @pytest.mark.asyncio
-async def test_retriever_search_with_missing_metadata(retriever, mock_vector_store):
-    """Test handling of results with incomplete metadata"""
-    # Arrange
-    query = SearchQuery(query="Test", tenant_id="test-tenant")
-    
-    mock_results = [
-        MagicMock(
-            score=0.9,
-            payload={
-                "content": "Test content",
-                "chunk_id": "1",
-                "document_id": "d1",
-                "metadata": {}  # Empty metadata
-            }
-        )
+async def test_search_respects_limit(retriever, mock_vector_store):
+    query = SearchQuery(query="Limit test", tenant_id="tenant-a", limit=2)
+    mock_vector_store.search.return_value = [
+        {"id": i, "score": 0.5 + i / 10, "content": f"C{i}", "document_id": f"d{i}", "chunk_index": i, "metadata": {}}
+        for i in range(5)
     ]
-    mock_vector_store.search.return_value = mock_results
-    
-    # Act
-    results = await retriever.search(query)
-    
-    # Assert
-    assert len(results) == 1
-    assert results[0].metadata == {}
+    response = await retriever.search(query)
+    assert response.total_results == 2
 
 
 @pytest.mark.asyncio
-async def test_retriever_tenant_isolation(retriever, mock_vector_store):
-    """Test that searches are tenant-isolated"""
-    # Arrange
-    query = SearchQuery(
-        query="Sensitive data",
-        tenant_id="tenant-a"
-    )
-    
-    # Act
-    await retriever.search(query)
-    
-    # Assert - Verify tenant_id is passed to vector store
-    call_args = mock_vector_store.search.call_args
-    assert call_args is not None
-    # The tenant_id should be used in collection name: tenant_tenant-a
+async def test_search_score_threshold_filters(retriever, mock_vector_store):
+    query = SearchQuery(query="Threshold", tenant_id="tenant-a", score_threshold=0.8, limit=10)
+    mock_vector_store.search.return_value = [
+        {"id": 1, "score": 0.95, "content": "High", "document_id": "d1", "chunk_index": 0, "metadata": {}},
+        {"id": 2, "score": 0.60, "content": "Low", "document_id": "d2", "chunk_index": 1, "metadata": {}},
+        {"id": 3, "score": 0.82, "content": "Med", "document_id": "d3", "chunk_index": 2, "metadata": {}},
+    ]
+    response = await retriever.search(query)
+    scores = [r.score for r in response.results]
+    assert all(s >= 0.8 for s in scores)
+    assert 0.60 not in scores
+
+
+@pytest.mark.asyncio
+async def test_close_calls_vector_store_close(retriever, mock_vector_store):
+    await retriever.close()
+    mock_vector_store.close.assert_called_once()

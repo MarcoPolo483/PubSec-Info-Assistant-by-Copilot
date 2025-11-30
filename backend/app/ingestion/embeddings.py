@@ -208,6 +208,26 @@ class HybridEmbeddingGenerator:
 class EmbeddingGeneratorFactory:
     """Factory for creating embedding generators."""
 
+    class NoopEmbeddingGenerator:
+        """No-op embedding generator used when fallbacks are disabled.
+
+        Returns zero vectors of configured size to satisfy interface without external dependencies.
+        """
+
+        async def generate(self, texts: list[str], config: EmbeddingConfig) -> list[list[float]]:  # type: ignore[override]
+            if not texts:
+                return []
+            size = getattr(settings, "vector_size", 32)
+            return [[0.0] * size for _ in texts]
+
+        async def generate_batch(self, chunks: list[Chunk], config: EmbeddingConfig) -> list[Chunk]:  # type: ignore[override]
+            if not chunks:
+                return []
+            size = getattr(settings, "vector_size", 32)
+            for c in chunks:
+                c.embedding = [0.0] * size
+            return chunks
+
     @staticmethod
     def create(
         use_openai: bool = True,
@@ -215,6 +235,20 @@ class EmbeddingGeneratorFactory:
         fallback_model: str = "all-MiniLM-L6-v2",
     ) -> EmbeddingGeneratorProtocol:
         """Create embedding generator."""
+        skip_st = os.environ.get("SKIP_SENTENCE_TRANSFORMERS") == "1"
+        if skip_st:
+            # Avoid constructing sentence-transformers entirely.
+            if use_openai:
+                try:
+                    return OpenAIEmbeddingGenerator(api_key=api_key)
+                except Exception as e:
+                    logger.warning(
+                        f"OpenAI embeddings unavailable under skip flag, using noop: {e}"
+                    )
+                    return EmbeddingGeneratorFactory.NoopEmbeddingGenerator()
+            else:
+                return EmbeddingGeneratorFactory.NoopEmbeddingGenerator()
+
         if use_openai:
             try:
                 return HybridEmbeddingGenerator(
@@ -223,5 +257,4 @@ class EmbeddingGeneratorFactory:
             except Exception as e:
                 logger.warning(f"Failed to create OpenAI generator, using fallback: {e}")
                 return SentenceTransformerEmbeddingGenerator(model_name=fallback_model)
-        else:
-            return SentenceTransformerEmbeddingGenerator(model_name=fallback_model)
+        return SentenceTransformerEmbeddingGenerator(model_name=fallback_model)

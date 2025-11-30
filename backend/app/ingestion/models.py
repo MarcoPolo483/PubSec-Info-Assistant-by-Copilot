@@ -80,9 +80,12 @@ class IngestionRequest(BaseModel):
 
 
 class IngestionResponse(BaseModel):
-    """Response model for document ingestion."""
+    """Response model for document ingestion.
 
-    document_id: UUID
+    document_id is optional for failure cases where a document UUID was never created.
+    """
+
+    document_id: UUID | None
     status: DocumentStatus
     chunks_created: int
     processing_time_ms: float
@@ -96,6 +99,9 @@ class ChunkingConfig(BaseModel):
     chunk_overlap: int = 102
     separator: str = "\n\n"
     keep_separator: bool = True
+    # Extended fields used by tests for tokenizer sizing
+    max_chunk_size: int | None = None
+    overlap_size: int | None = None
 
 
 class EmbeddingConfig(BaseModel):

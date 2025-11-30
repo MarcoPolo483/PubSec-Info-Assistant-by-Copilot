@@ -5,15 +5,14 @@ import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, MagicMock, patch
 from app.main import app
+from app.llm.models import TokensUsed
 
 
 @pytest.fixture
 def mock_services():
     """Mock all services used by FastAPI"""
     with patch('app.main.ingestion_service') as mock_ingestion, \
-         patch('app.main.rag_service') as mock_rag, \
-         patch('app.main.vector_store') as mock_vector_store, \
-         patch('app.main.redis_cache') as mock_cache:
+         patch('app.main.rag_service') as mock_rag:
         
         # Mock ingestion service
         mock_ingestion.process_file.return_value = {
@@ -37,30 +36,26 @@ def mock_services():
             ],
             "retrieval_results": 1,
             "cost": 0.00007,
-            "tokens_used": {"input": 500, "output": 100, "total": 600},
+            "tokens_used": TokensUsed(input_tokens=500, output_tokens=100, total=600),
             "tenant_balance": 99.99993,
             "processing_time_ms": 350,
             "cached": False
         }
         
-        # Mock vector store
-        mock_vector_store.get_collection_stats.return_value = {
-            "total_documents": 100,
-            "total_chunks": 1000,
-            "collection_name": "tenant_default"
-        }
-        
-        # Mock cache
-        mock_cache.get_tenant_stats.return_value = {
+        # Mock other methods if needed
+        mock_rag.get_tenant_stats.return_value = {
+            "tenant_id": "default",
             "balance": 100.0,
-            "requests_today": 50
+            "collection_stats": {
+                "total_documents": 100,
+                "total_chunks": 1000,
+                "collection_name": "tenant_default"
+            }
         }
         
         yield {
             "ingestion": mock_ingestion,
-            "rag": mock_rag,
-            "vector_store": mock_vector_store,
-            "cache": mock_cache
+            "rag": mock_rag
         }
 
 
