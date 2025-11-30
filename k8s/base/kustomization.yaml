@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: pubsec-info-assistant
+
+resources:
+- backend-deployment.yaml
+- frontend-deployment.yaml
+- statefulsets.yaml
+- services.yaml
+- configmap.yaml
+- ingress.yaml
+- hpa.yaml
+- pdb.yaml
+- network-policy.yaml
+
+commonLabels:
+  app: pubsec-info-assistant
+  managed-by: kustomize
+
+images:
+- name: ghcr.io/marcopolo483/pubsec-info-assistant-by-copilot/backend
+  newTag: latest
+- name: ghcr.io/marcopolo483/pubsec-info-assistant-by-copilot/frontend
+  newTag: latest

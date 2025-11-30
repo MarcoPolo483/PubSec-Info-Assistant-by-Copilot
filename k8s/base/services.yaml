@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  labels:
+    app: pubsec-info-assistant
+    component: backend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8000
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: pubsec-info-assistant
+    component: backend
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  labels:
+    app: pubsec-info-assistant
+    component: frontend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: pubsec-info-assistant
+    component: frontend
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qdrant
+  labels:
+    app: pubsec-info-assistant
+    component: qdrant
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6333
+    targetPort: http
+    protocol: TCP
+    name: http
+  - port: 6334
+    targetPort: grpc
+    protocol: TCP
+    name: grpc
+  selector:
+    app: pubsec-info-assistant
+    component: qdrant
+  clusterIP: None  # Headless service for StatefulSet
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    app: pubsec-info-assistant
+    component: redis
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6379
+    targetPort: redis
+    protocol: TCP
+    name: redis
+  selector:
+    app: pubsec-info-assistant
+    component: redis
+  clusterIP: None  # Headless service for StatefulSet

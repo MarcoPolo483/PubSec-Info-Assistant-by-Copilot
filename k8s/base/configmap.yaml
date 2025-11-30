@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pubsec-config
+  labels:
+    app: pubsec-info-assistant
+data:
+  allowed-origins: "https://pubsec-info-assistant.com,https://staging.pubsec-info-assistant.local,https://dev.pubsec-info-assistant.local"
+  default-chunk-size: "512"
+  default-chunk-overlap: "102"
+  embedding-batch-size: "100"
+  query-cache-ttl: "3600"
+  rate-limit-per-minute: "100"
+  default-tenant-balance: "1000.0"
