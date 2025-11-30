@@ -8,9 +8,9 @@ owner       = "devops@example.com"
 cost_center = "IT-Staging"
 
 # Networking
-vnet_address_space         = ["10.1.0.0/16"]
-enable_ddos_protection     = false
-enable_private_link        = true
+vnet_address_space     = ["10.1.0.0/16"]
+enable_ddos_protection = false
+enable_private_link    = true
 
 # ACR
 acr_sku                       = "Premium"

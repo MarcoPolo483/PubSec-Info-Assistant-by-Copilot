@@ -51,10 +51,10 @@ resource "azurerm_subnet" "appgw" {
 
 # Private Endpoint Subnet
 resource "azurerm_subnet" "private_endpoint" {
-  name                 = "private-endpoint-subnet"
-  resource_group_name  = var.resource_group_name
-  virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = [var.private_endpoint_cidr]
+  name                                      = "private-endpoint-subnet"
+  resource_group_name                       = var.resource_group_name
+  virtual_network_name                      = azurerm_virtual_network.vnet.name
+  address_prefixes                          = [var.private_endpoint_cidr]
   private_endpoint_network_policies_enabled = false
 }
 
@@ -142,12 +142,47 @@ resource "azurerm_private_dns_zone_virtual_network_link" "aks" {
   tags                  = var.tags
 }
 
-output "vnet_name" { value = azurerm_virtual_network.vnet.name }
-output "vnet_id" { value = azurerm_virtual_network.vnet.id }
-output "aks_subnet_id" { value = azurerm_subnet.aks.id }
-output "appgw_subnet_id" { value = azurerm_subnet.appgw.id }
-output "private_endpoint_subnet_id" { value = azurerm_subnet.private_endpoint.id }
-output "database_subnet_id" { value = azurerm_subnet.database.id }
-output "acr_private_dns_zone_id" { value = var.enable_private_link ? azurerm_private_dns_zone.acr[0].id : null }
-output "keyvault_private_dns_zone_id" { value = var.enable_private_link ? azurerm_private_dns_zone.keyvault[0].id : null }
-output "aks_private_dns_zone_id" { value = var.enable_private_link ? azurerm_private_dns_zone.aks[0].id : null }
+output "vnet_name" {
+  description = "Virtual network name"
+  value       = azurerm_virtual_network.vnet.name
+}
+
+output "vnet_id" {
+  description = "Virtual network ID"
+  value       = azurerm_virtual_network.vnet.id
+}
+
+output "aks_subnet_id" {
+  description = "AKS subnet ID"
+  value       = azurerm_subnet.aks.id
+}
+
+output "appgw_subnet_id" {
+  description = "Application Gateway subnet ID"
+  value       = azurerm_subnet.appgw.id
+}
+
+output "private_endpoint_subnet_id" {
+  description = "Private endpoint subnet ID"
+  value       = azurerm_subnet.private_endpoint.id
+}
+
+output "database_subnet_id" {
+  description = "Database subnet ID"
+  value       = azurerm_subnet.database.id
+}
+
+output "acr_private_dns_zone_id" {
+  description = "ACR private DNS zone ID"
+  value       = var.enable_private_link ? azurerm_private_dns_zone.acr[0].id : null
+}
+
+output "keyvault_private_dns_zone_id" {
+  description = "Key Vault private DNS zone ID"
+  value       = var.enable_private_link ? azurerm_private_dns_zone.keyvault[0].id : null
+}
+
+output "aks_private_dns_zone_id" {
+  description = "AKS private DNS zone ID"
+  value       = var.enable_private_link ? azurerm_private_dns_zone.aks[0].id : null
+}

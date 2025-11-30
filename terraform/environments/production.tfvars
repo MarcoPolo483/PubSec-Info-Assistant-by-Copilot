@@ -8,9 +8,9 @@ owner       = "sre@example.com"
 cost_center = "IT-Production"
 
 # Networking
-vnet_address_space         = ["10.2.0.0/16"]
-enable_ddos_protection     = true
-enable_private_link        = true
+vnet_address_space     = ["10.2.0.0/16"]
+enable_ddos_protection = true
+enable_private_link    = true
 
 # ACR
 acr_sku                       = "Premium"

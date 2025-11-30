@@ -168,5 +168,12 @@ resource "azurerm_monitor_diagnostic_setting" "appgw" {
   }
 }
 
-output "public_ip_address" { value = azurerm_public_ip.appgw.ip_address }
-output "appgw_id" { value = azurerm_application_gateway.appgw.id }
+output "public_ip_address" {
+  description = "Application Gateway public IP address"
+  value       = azurerm_public_ip.appgw.ip_address
+}
+
+output "appgw_id" {
+  description = "Application Gateway resource ID"
+  value       = azurerm_application_gateway.appgw.id
+}
