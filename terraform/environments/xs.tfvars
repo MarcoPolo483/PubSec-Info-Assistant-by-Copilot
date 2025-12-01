@@ -45,13 +45,13 @@ acr_geo_replication_locations = []       # No geo-replication
 # Azure Kubernetes Service (AKS)
 # -----------------------------------------------------------------------------
 
-aks_kubernetes_version        = "1.28.3"
+aks_kubernetes_version        = "1.33.5"
 aks_automatic_channel_upgrade = "stable"
 aks_sku_tier                  = "Free"  # No SLA but cost-effective for demo
 
 # Network configuration
-aks_dns_service_ip     = "10.0.4.10"
-aks_service_cidr       = "10.0.4.0/24"
+aks_dns_service_ip     = "10.2.0.10"
+aks_service_cidr       = "10.2.0.0/16"
 aks_docker_bridge_cidr = "172.17.0.1/16"
 
 # System Node Pool (runs all workloads in XS size)

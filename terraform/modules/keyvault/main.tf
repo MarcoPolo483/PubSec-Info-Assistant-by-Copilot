@@ -6,7 +6,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.80"
+      version = "~> 4.0"
     }
   }
 }
@@ -38,7 +38,7 @@ resource "azurerm_key_vault" "kv" {
   sku_name                      = var.sku_name
   soft_delete_retention_days    = var.soft_delete_retention_days
   purge_protection_enabled      = var.enable_purge_protection
-  enable_rbac_authorization     = var.enable_rbac_authorization
+  rbac_authorization_enabled    = var.enable_rbac_authorization
   public_network_access_enabled = var.public_network_access
 
   network_acls {
@@ -77,13 +77,23 @@ resource "azurerm_role_assignment" "aks_secrets_user" {
   principal_id         = var.aks_principal_id
 }
 
+# Ensure the current Terraform caller can manage secrets when RBAC is enabled
+resource "azurerm_role_assignment" "kv_secrets_officer_current" {
+  scope                = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = data.azurerm_client_config.current.object_id
+}
+
 resource "azurerm_key_vault_secret" "secrets" {
   for_each     = var.secrets
   name         = each.key
   value        = each.value.value
   key_vault_id = azurerm_key_vault.kv.id
 
-  depends_on = [azurerm_role_assignment.aks_secrets_user]
+  depends_on = [
+    azurerm_role_assignment.aks_secrets_user,
+    azurerm_role_assignment.kv_secrets_officer_current
+  ]
 }
 
 output "keyvault_name" {

@@ -19,11 +19,11 @@ acr_retention_days            = 30
 acr_geo_replication_locations = ["westus", "centralus"]
 
 # AKS
-aks_kubernetes_version        = "1.28.3"
+aks_kubernetes_version        = "1.33.5"
 aks_automatic_channel_upgrade = "stable"
 aks_sku_tier                  = "Premium"
-aks_dns_service_ip            = "10.2.4.10"
-aks_service_cidr              = "10.2.4.0/24"
+aks_dns_service_ip            = "10.4.0.10"
+aks_service_cidr              = "10.4.0.0/16"
 aks_docker_bridge_cidr        = "172.17.0.1/16"
 
 # System node pool (production-grade)

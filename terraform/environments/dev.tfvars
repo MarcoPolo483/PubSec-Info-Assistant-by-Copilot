@@ -19,21 +19,21 @@ acr_retention_days            = 7
 acr_geo_replication_locations = []
 
 # AKS
-aks_kubernetes_version        = "1.28.3"
+aks_kubernetes_version        = "1.33.5"
 aks_automatic_channel_upgrade = "stable"
 aks_sku_tier                  = "Standard"
-aks_dns_service_ip            = "10.0.4.10"
-aks_service_cidr              = "10.0.4.0/24"
+aks_dns_service_ip            = "10.2.0.10"
+aks_service_cidr              = "10.2.0.0/16"
 aks_docker_bridge_cidr        = "172.17.0.1/16"
 
 # System node pool (smaller for dev)
-aks_system_node_pool_vm_size    = "Standard_D2s_v5"
+aks_system_node_pool_vm_size    = "Standard_B2s"
 aks_system_node_pool_node_count = 1
 aks_system_node_pool_min_count  = 1
 aks_system_node_pool_max_count  = 3
 
 # User node pool (smaller for dev)
-aks_user_node_pool_vm_size    = "Standard_D4s_v5"
+aks_user_node_pool_vm_size    = "Standard_B2ms"
 aks_user_node_pool_node_count = 1
 aks_user_node_pool_min_count  = 1
 aks_user_node_pool_max_count  = 5

@@ -137,21 +137,23 @@ aks_user_node_pool_min_count = 2
 
 ### 3. Plan and Apply
 
-```bash
+```powershell
+$sub = "<SUBSCRIPTION_ID>"
+az account set --subscription $sub
+$env:ARM_SUBSCRIPTION_ID = $sub
+
 # Review changes
-terraform plan -var-file="environments/dev.tfvars"
+terraform plan -input=false -var-file "environments/dev.tfvars" -out plan.tfplan
 
 # Apply infrastructure
-terraform apply -var-file="environments/dev.tfvars"
+terraform apply "plan.tfplan"
 ```
 
 ### 4. Configure kubectl
 
-```bash
+```powershell
 # Get AKS credentials
-az aks get-credentials \
-  --resource-group $(terraform output -raw resource_group_name) \
-  --name $(terraform output -raw aks_cluster_name)
+az aks get-credentials --resource-group pubsec-info-assistant-dev-rg --name pubsec-info-assistant-dev-aks
 
 # Verify connection
 kubectl get nodes

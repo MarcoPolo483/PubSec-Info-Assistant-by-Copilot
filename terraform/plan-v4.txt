@@ -1,0 +1,869 @@
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+ <= read (data resources)
+
+Terraform will perform the following actions:
+
+  # azurerm_resource_group.main will be created
+  + resource "azurerm_resource_group" "main" {
+      + id       = (known after apply)
+      + location = "eastus"
+      + name     = "pubsec-info-assistant-dev-rg"
+      + tags     = {
+          + "Compliance"  = "FedRAMP-High"
+          + "CostCenter"  = "IT-Development"
+          + "Department"  = "Engineering"
+          + "Environment" = "dev"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "devops@example.com"
+          + "Project"     = "pubsec-info-assistant"
+          + "Purpose"     = "Development"
+        }
+    }
+
+  # random_password.app_secret_key will be created
+  + resource "random_password" "app_secret_key" {
+      + bcrypt_hash = (sensitive value)
+      + id          = (known after apply)
+      + length      = 64
+      + lower       = true
+      + min_lower   = 0
+      + min_numeric = 0
+      + min_special = 0
+      + min_upper   = 0
+      + number      = true
+      + numeric     = true
+      + result      = (sensitive value)
+      + special     = true
+      + upper       = true
+    }
+
+  # random_password.qdrant_api_key will be created
+  + resource "random_password" "qdrant_api_key" {
+      + bcrypt_hash = (sensitive value)
+      + id          = (known after apply)
+      + length      = 64
+      + lower       = true
+      + min_lower   = 0
+      + min_numeric = 0
+      + min_special = 0
+      + min_upper   = 0
+      + number      = true
+      + numeric     = true
+      + result      = (sensitive value)
+      + special     = false
+      + upper       = true
+    }
+
+  # random_password.redis_password will be created
+  + resource "random_password" "redis_password" {
+      + bcrypt_hash = (sensitive value)
+      + id          = (known after apply)
+      + length      = 32
+      + lower       = true
+      + min_lower   = 0
+      + min_numeric = 0
+      + min_special = 0
+      + min_upper   = 0
+      + number      = true
+      + numeric     = true
+      + result      = (sensitive value)
+      + special     = true
+      + upper       = true
+    }
+
+  # module.acr.azurerm_container_registry.acr will be created
+  + resource "azurerm_container_registry" "acr" {
+      + admin_enabled                 = false
+      + admin_password                = (sensitive value)
+      + admin_username                = (known after apply)
+      + data_endpoint_host_names      = (known after apply)
+      + encryption                    = (known after apply)
+      + export_policy_enabled         = true
+      + id                            = (known after apply)
+      + location                      = "eastus"
+      + login_server                  = (known after apply)
+      + name                          = "pubsecinfoassistantdevacr"
+      + network_rule_bypass_option    = "AzureServices"
+      + network_rule_set              = [
+          + {
+              + default_action = "Deny"
+              + ip_rule        = (known after apply)
+            },
+        ]
+      + public_network_access_enabled = false
+      + resource_group_name           = "pubsec-info-assistant-dev-rg"
+      + retention_policy_in_days      = 7
+      + sku                           = "Premium"
+      + tags                          = {
+          + "Compliance"  = "FedRAMP-High"
+          + "CostCenter"  = "IT-Development"
+          + "Department"  = "Engineering"
+          + "Environment" = "dev"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "devops@example.com"
+          + "Project"     = "pubsec-info-assistant"
+          + "Purpose"     = "Development"
+        }
+      + trust_policy_enabled          = true
+      + zone_redundancy_enabled       = false
+
+      + identity {
+          + principal_id = (known after apply)
+          + tenant_id    = (known after apply)
+          + type         = "SystemAssigned"
+        }
+    }
+
+  # module.acr.azurerm_private_endpoint.acr[0] will be created
+  + resource "azurerm_private_endpoint" "acr" {
+      + custom_dns_configs       = (known after apply)
+      + id                       = (known after apply)
+      + location                 = "eastus"
+      + name                     = "pubsecinfoassistantdevacr-pe"
+      + network_interface        = (known after apply)
+      + private_dns_zone_configs = (known after apply)
+      + resource_group_name      = "pubsec-info-assistant-dev-rg"
+      + subnet_id                = (known after apply)
+      + tags                     = {
+          + "Compliance"  = "FedRAMP-High"
+          + "CostCenter"  = "IT-Development"
+          + "Department"  = "Engineering"
+          + "Environment" = "dev"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "devops@example.com"
+          + "Project"     = "pubsec-info-assistant"
+          + "Purpose"     = "Development"
+        }
+
+      + private_dns_zone_group {
+          + id                   = (known after apply)
+          + name                 = "acr-dns-zone-group"
+          + private_dns_zone_ids = (known after apply)
+        }
+
+      + private_service_connection {
+          + is_manual_connection           = false
+          + name                           = "pubsecinfoassistantdevacr-psc"
+          + private_connection_resource_id = (known after apply)
+          + private_ip_address             = (known after apply)
+          + subresource_names              = [
+              + "registry",
+            ]
+        }
+    }
+
+  # module.aks.azurerm_kubernetes_cluster.aks will be created
+  + resource "azurerm_kubernetes_cluster" "aks" {
+      + ai_toolchain_operator_enabled       = false
+      + automatic_upgrade_channel           = "stable"
+      + azure_policy_enabled                = true
+      + current_kubernetes_version          = (known after apply)
+      + dns_prefix                          = "pubsec-info-assistant-dev"
+      + fqdn                                = (known after apply)
+      + http_application_routing_zone_name  = (known after apply)
+      + id                                  = (known after apply)
+      + kube_admin_config                   = (sensitive value)
+      + kube_admin_config_raw               = (sensitive value)
+      + kube_config                         = (sensitive value)
+      + kube_config_raw                     = (sensitive value)
+      + kubernetes_version                  = "1.28.3"
+      + location                            = "eastus"
+      + name                                = "pubsec-info-assistant-dev-aks"
+      + node_os_upgrade_channel             = "NodeImage"
+      + node_resource_group                 = (known after apply)
+      + node_resource_group_id              = (known after apply)
+      + oidc_issuer_enabled                 = true
+      + oidc_issuer_url                     = (known after apply)
+      + portal_fqdn                         = (known after apply)
+      + private_cluster_enabled             = false
+      + private_cluster_public_fqdn_enabled = false
+      + private_dns_zone_id                 = (known after apply)
+      + private_fqdn                        = (known after apply)
+      + resource_group_name                 = "pubsec-info-assistant-dev-rg"
+      + role_based_access_control_enabled   = true
+      + run_command_enabled                 = true
+      + sku_tier                            = "Standard"
+      + support_plan                        = "KubernetesOfficial"
+      + tags                                = {
+          + "Compliance"  = "FedRAMP-High"
+          + "CostCenter"  = "IT-Development"
+          + "Department"  = "Engineering"
+          + "Environment" = "dev"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "devops@example.com"
+          + "Project"     = "pubsec-info-assistant"
+          + "Purpose"     = "Development"
+        }
+      + workload_identity_enabled           = true
+
+      + auto_scaler_profile {
+          + balance_similar_node_groups                   = true
+          + daemonset_eviction_for_empty_nodes_enabled    = false
+          + daemonset_eviction_for_occupied_nodes_enabled = true
+          + empty_bulk_delete_max                         = (known after apply)
+          + expander                                      = "random"
+          + ignore_daemonsets_utilization_enabled         = false
+          + max_graceful_termination_sec                  = "600"
+          + max_node_provisioning_time                    = "15m"
+          + max_unready_nodes                             = 3
+          + max_unready_percentage                        = 45
+          + new_pod_scale_up_delay                        = "0s"
+          + scale_down_delay_after_add                    = "10m"
+          + scale_down_delay_after_delete                 = "10s"
+          + scale_down_delay_after_failure                = "3m"
+          + scale_down_unneeded                           = "10m"
+          + scale_down_unready                            = "20m"
+          + scale_down_utilization_threshold              = "0.5"
+          + scan_interval                                 = "10s"
+          + skip_nodes_with_system_pods                   = true
+        }
+
+      + bootstrap_profile (known after apply)
+
+      + default_node_pool {
+          + auto_scaling_enabled = true
+          + kubelet_disk_type    = (known after apply)
+          + max_count            = 3
+          + max_pods             = 110
+          + min_count            = 1
+          + name                 = "system"
+          + node_count           = 1
+          + node_labels          = {
+              + "role" = "system"
+            }
+          + orchestrator_version = (known after apply)
+          + os_disk_size_gb      = 128
+          + os_disk_type         = "Managed"
+          + os_sku               = (known after apply)
+          + scale_down_mode      = "Delete"
+          + type                 = "VirtualMachineScaleSets"
+          + ultra_ssd_enabled    = false
+          + vm_size              = "Standard_D2s_v5"
+          + vnet_subnet_id       = (known after apply)
+          + workload_runtime     = (known after apply)
+
+          + upgrade_settings {
+              + max_surge = "33%"
+            }
+        }
+
+      + identity {
+          + principal_id = (known after apply)
+          + tenant_id    = (known after apply)
+          + type         = "SystemAssigned"
+        }
+
+      + key_vault_secrets_provider {
+          + secret_identity          = (known after apply)
+          + secret_rotation_enabled  = true
+          + secret_rotation_interval = "2m"
+        }
+
+      + kubelet_identity (known after apply)
+
+      + maintenance_window {
+          + allowed {
+              + day   = "Sunday"
+              + hours = [
+                  + 2,
+                  + 3,
+                  + 4,
+                ]
+            }
+        }
+
+      + network_profile {
+          + dns_service_ip     = "10.0.4.10"
+          + ip_versions        = (known after apply)
+          + load_balancer_sku  = "standard"
+          + network_data_plane = "azure"
+          + network_mode       = (known after apply)
+          + network_plugin     = "azure"
+          + network_policy     = "azure"
+          + outbound_type      = "loadBalancer"
+          + pod_cidr           = (known after apply)
+          + pod_cidrs          = (known after apply)
+          + service_cidr       = "10.0.4.0/24"
+          + service_cidrs      = (known after apply)
+
+          + load_balancer_profile (known after apply)
+
+          + nat_gateway_profile (known after apply)
+        }
+
+      + oms_agent {
+          + log_analytics_workspace_id = (known after apply)
+          + oms_agent_identity         = (known after apply)
+        }
+
+      + windows_profile (known after apply)
+    }
+
+  # module.aks.azurerm_kubernetes_cluster_node_pool.user will be created
+  + resource "azurerm_kubernetes_cluster_node_pool" "user" {
+      + auto_scaling_enabled  = true
+      + id                    = (known after apply)
+      + kubelet_disk_type     = (known after apply)
+      + kubernetes_cluster_id = (known after apply)
+      + max_count             = 5
+      + max_pods              = 110
+      + min_count             = 1
+      + mode                  = "User"
+      + name                  = "user"
+      + node_count            = 1
+      + node_labels           = {
+          + "role"     = "user"
+          + "workload" = "application"
+        }
+      + node_taints           = []
+      + orchestrator_version  = (known after apply)
+      + os_disk_size_gb       = 256
+      + os_disk_type          = "Managed"
+      + os_sku                = (known after apply)
+      + os_type               = "Linux"
+      + priority              = "Regular"
+      + scale_down_mode       = "Delete"
+      + spot_max_price        = -1
+      + tags                  = {
+          + "Compliance"  = "FedRAMP-High"
+          + "CostCenter"  = "IT-Development"
+          + "Department"  = "Engineering"
+          + "Environment" = "dev"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "devops@example.com"
+          + "Project"     = "pubsec-info-assistant"
+          + "Purpose"     = "Development"
+        }
+      + ultra_ssd_enabled     = false
+      + vm_size               = "Standard_D4s_v5"
+      + vnet_subnet_id        = (known after apply)
+
+      + upgrade_settings {
+          + max_surge = "33%"
+        }
+    }
+
+  # module.aks.azurerm_role_assignment.aks_acr_pull will be created
+  + resource "azurerm_role_assignment" "aks_acr_pull" {
+      + condition_version                = (known after apply)
+      + id                               = (known after apply)
+      + name                             = (known after apply)
+      + principal_id                     = (known after apply)
+      + principal_type                   = (known after apply)
+      + role_definition_id               = (known after apply)
+      + role_definition_name             = "AcrPull"
+      + scope                            = (known after apply)
+      + skip_service_principal_aad_check = true
+    }
+
+  # module.keyvault.data.azurerm_client_config.current will be read during apply
+  # (depends on a resource or a module with changes pending)
+ <= data "azurerm_client_config" "current" {
+      + client_id       = (known after apply)
+      + id              = (known after apply)
+      + object_id       = (known after apply)
+      + subscription_id = (known after apply)
+      + tenant_id       = (known after apply)
+    }
+
+  # module.keyvault.azurerm_key_vault.kv will be created
+  + resource "azurerm_key_vault" "kv" {
+      + access_policy                 = (known after apply)
+      + enable_rbac_authorization     = true
+      + id                            = (known after apply)
+      + location                      = "eastus"
+      + name                          = "pubsecinfoassistantdevkv"
+      + public_network_access_enabled = true
+      + purge_protection_enabled      = false
+      + rbac_authorization_enabled    = (known after apply)
+      + resource_group_name           = "pubsec-info-assistant-dev-rg"
+      + sku_name                      = "standard"
+      + soft_delete_retention_days    = 90
+      + tags                          = {
+          + "Compliance"  = "FedRAMP-High"
+          + "CostCenter"  = "IT-Development"
+          + "Department"  = "Engineering"
+          + "Environment" = "dev"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "devops@example.com"
+          + "Project"     = "pubsec-info-assistant"
+          + "Purpose"     = "Development"
+        }
+      + tenant_id                     = (known after apply)
+      + vault_uri                     = (known after apply)
+
+      + contact (known after apply)
+
+      + network_acls {
+          + bypass         = "AzureServices"
+          + default_action = "Allow"
+        }
+    }
+
+  # module.keyvault.azurerm_key_vault_secret.secrets["app-secret-key"] will be created
+  + resource "azurerm_key_vault_secret" "secrets" {
+      + id                      = (known after apply)
+      + key_vault_id            = (known after apply)
+      + name                    = "app-secret-key"
+      + resource_id             = (known after apply)
+      + resource_versionless_id = (known after apply)
+      + value                   = (sensitive value)
+      + value_wo                = (write-only attribute)
+      + version                 = (known after apply)
+      + versionless_id          = (known after apply)
+    }
+
+  # module.keyvault.azurerm_key_vault_secret.secrets["openai-api-key"] will be created
+  + resource "azurerm_key_vault_secret" "secrets" {
+      + id                      = (known after apply)
+      + key_vault_id            = (known after apply)
+      + name                    = "openai-api-key"
+      + resource_id             = (known after apply)
+      + resource_versionless_id = (known after apply)
+      + value                   = (sensitive value)
+      + value_wo                = (write-only attribute)
+      + version                 = (known after apply)
+      + versionless_id          = (known after apply)
+    }
+
+  # module.keyvault.azurerm_key_vault_secret.secrets["qdrant-api-key"] will be created
+  + resource "azurerm_key_vault_secret" "secrets" {
+      + id                      = (known after apply)
+      + key_vault_id            = (known after apply)
+      + name                    = "qdrant-api-key"
+      + resource_id             = (known after apply)
+      + resource_versionless_id = (known after apply)
+      + value                   = (sensitive value)
+      + value_wo                = (write-only attribute)
+      + version                 = (known after apply)
+      + versionless_id          = (known after apply)
+    }
+
+  # module.keyvault.azurerm_key_vault_secret.secrets["redis-password"] will be created
+  + resource "azurerm_key_vault_secret" "secrets" {
+      + id                      = (known after apply)
+      + key_vault_id            = (known after apply)
+      + name                    = "redis-password"
+      + resource_id             = (known after apply)
+      + resource_versionless_id = (known after apply)
+      + value                   = (sensitive value)
+      + value_wo                = (write-only attribute)
+      + version                 = (known after apply)
+      + versionless_id          = (known after apply)
+    }
+
+  # module.keyvault.azurerm_role_assignment.aks_secrets_user will be created
+  + resource "azurerm_role_assignment" "aks_secrets_user" {
+      + condition_version                = (known after apply)
+      + id                               = (known after apply)
+      + name                             = (known after apply)
+      + principal_id                     = (known after apply)
+      + principal_type                   = (known after apply)
+      + role_definition_id               = (known after apply)
+      + role_definition_name             = "Key Vault Secrets User"
+      + scope                            = (known after apply)
+      + skip_service_principal_aad_check = (known after apply)
+    }
+
+  # module.monitoring.azurerm_application_insights.ai will be created
+  + resource "azurerm_application_insights" "ai" {
+      + app_id                              = (known after apply)
+      + application_type                    = "web"
+      + connection_string                   = (sensitive value)
+      + daily_data_cap_in_gb                = 100
+      + disable_ip_masking                  = false
+      + force_customer_storage_for_profiler = false
+      + id                                  = (known after apply)
+      + instrumentation_key                 = (sensitive value)
+      + internet_ingestion_enabled          = true
+      + internet_query_enabled              = true
+      + local_authentication_disabled       = false
+      + location                            = "eastus"
+      + name                                = "pubsec-info-assistant-dev-ai"
+      + resource_group_name                 = "pubsec-info-assistant-dev-rg"
+      + retention_in_days                   = 90
+      + sampling_percentage                 = 100
+      + tags                                = {
+          + "Compliance"  = "FedRAMP-High"
+          + "CostCenter"  = "IT-Development"
+          + "Department"  = "Engineering"
+          + "Environment" = "dev"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "devops@example.com"
+          + "Project"     = "pubsec-info-assistant"
+          + "Purpose"     = "Development"
+        }
+      + workspace_id                        = (known after apply)
+    }
+
+  # module.monitoring.azurerm_log_analytics_workspace.law will be created
+  + resource "azurerm_log_analytics_workspace" "law" {
+      + allow_resource_only_permissions = true
+      + daily_quota_gb                  = -1
+      + id                              = (known after apply)
+      + internet_ingestion_enabled      = true
+      + internet_query_enabled          = true
+      + local_authentication_disabled   = (known after apply)
+      + local_authentication_enabled    = (known after apply)
+      + location                        = "eastus"
+      + name                            = "pubsec-info-assistant-dev-law"
+      + primary_shared_key              = (sensitive value)
+      + resource_group_name             = "pubsec-info-assistant-dev-rg"
+      + retention_in_days               = 30
+      + secondary_shared_key            = (sensitive value)
+      + sku                             = "PerGB2018"
+      + tags                            = {
+          + "Compliance"  = "FedRAMP-High"
+          + "CostCenter"  = "IT-Development"
+          + "Department"  = "Engineering"
+          + "Environment" = "dev"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "devops@example.com"
+          + "Project"     = "pubsec-info-assistant"
+          + "Purpose"     = "Development"
+        }
+      + workspace_id                    = (known after apply)
+    }
+
+  # module.monitoring.azurerm_monitor_action_group.main[0] will be created
+  + resource "azurerm_monitor_action_group" "main" {
+      + enabled             = true
+      + id                  = (known after apply)
+      + location            = "global"
+      + name                = "pubsec-info-assistant-dev-action-group"
+      + resource_group_name = "pubsec-info-assistant-dev-rg"
+      + short_name          = "pubsec-ag"
+      + tags                = {
+          + "Compliance"  = "FedRAMP-High"
+          + "CostCenter"  = "IT-Development"
+          + "Department"  = "Engineering"
+          + "Environment" = "dev"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "devops@example.com"
+          + "Project"     = "pubsec-info-assistant"
+          + "Purpose"     = "Development"
+        }
+
+      + email_receiver {
+          + email_address = "devops@example.com"
+          + name          = "email-0"
+        }
+    }
+
+  # module.networking.azurerm_network_security_group.aks will be created
+  + resource "azurerm_network_security_group" "aks" {
+      + id                  = (known after apply)
+      + location            = "eastus"
+      + name                = "pubsec-info-assistant-dev-aks-nsg"
+      + resource_group_name = "pubsec-info-assistant-dev-rg"
+      + security_rule       = [
+          + {
+              + access                                     = "Allow"
+              + destination_address_prefix                 = "*"
+              + destination_address_prefixes               = []
+              + destination_application_security_group_ids = []
+              + destination_port_range                     = "443"
+              + destination_port_ranges                    = []
+              + direction                                  = "Inbound"
+              + name                                       = "AllowHTTPS"
+              + priority                                   = 100
+              + protocol                                   = "Tcp"
+              + source_address_prefix                      = "VirtualNetwork"
+              + source_address_prefixes                    = []
+              + source_application_security_group_ids      = []
+              + source_port_range                          = "*"
+              + source_port_ranges                         = []
+                # (1 unchanged attribute hidden)
+            },
+        ]
+      + tags                = {
+          + "Compliance"  = "FedRAMP-High"
+          + "CostCenter"  = "IT-Development"
+          + "Department"  = "Engineering"
+          + "Environment" = "dev"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "devops@example.com"
+          + "Project"     = "pubsec-info-assistant"
+          + "Purpose"     = "Development"
+        }
+    }
+
+  # module.networking.azurerm_private_dns_zone.acr[0] will be created
+  + resource "azurerm_private_dns_zone" "acr" {
+      + id                                                    = (known after apply)
+      + max_number_of_record_sets                             = (known after apply)
+      + max_number_of_virtual_network_links                   = (known after apply)
+      + max_number_of_virtual_network_links_with_registration = (known after apply)
+      + name                                                  = "privatelink.azurecr.io"
+      + number_of_record_sets                                 = (known after apply)
+      + resource_group_name                                   = "pubsec-info-assistant-dev-rg"
+      + tags                                                  = {
+          + "Compliance"  = "FedRAMP-High"
+          + "CostCenter"  = "IT-Development"
+          + "Department"  = "Engineering"
+          + "Environment" = "dev"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "devops@example.com"
+          + "Project"     = "pubsec-info-assistant"
+          + "Purpose"     = "Development"
+        }
+
+      + soa_record (known after apply)
+    }
+
+  # module.networking.azurerm_private_dns_zone.aks[0] will be created
+  + resource "azurerm_private_dns_zone" "aks" {
+      + id                                                    = (known after apply)
+      + max_number_of_record_sets                             = (known after apply)
+      + max_number_of_virtual_network_links                   = (known after apply)
+      + max_number_of_virtual_network_links_with_registration = (known after apply)
+      + name                                                  = "privatelink.eastus.azmk8s.io"
+      + number_of_record_sets                                 = (known after apply)
+      + resource_group_name                                   = "pubsec-info-assistant-dev-rg"
+      + tags                                                  = {
+          + "Compliance"  = "FedRAMP-High"
+          + "CostCenter"  = "IT-Development"
+          + "Department"  = "Engineering"
+          + "Environment" = "dev"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "devops@example.com"
+          + "Project"     = "pubsec-info-assistant"
+          + "Purpose"     = "Development"
+        }
+
+      + soa_record (known after apply)
+    }
+
+  # module.networking.azurerm_private_dns_zone.keyvault[0] will be created
+  + resource "azurerm_private_dns_zone" "keyvault" {
+      + id                                                    = (known after apply)
+      + max_number_of_record_sets                             = (known after apply)
+      + max_number_of_virtual_network_links                   = (known after apply)
+      + max_number_of_virtual_network_links_with_registration = (known after apply)
+      + name                                                  = "privatelink.vaultcore.azure.net"
+      + number_of_record_sets                                 = (known after apply)
+      + resource_group_name                                   = "pubsec-info-assistant-dev-rg"
+      + tags                                                  = {
+          + "Compliance"  = "FedRAMP-High"
+          + "CostCenter"  = "IT-Development"
+          + "Department"  = "Engineering"
+          + "Environment" = "dev"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "devops@example.com"
+          + "Project"     = "pubsec-info-assistant"
+          + "Purpose"     = "Development"
+        }
+
+      + soa_record (known after apply)
+    }
+
+  # module.networking.azurerm_private_dns_zone_virtual_network_link.acr[0] will be created
+  + resource "azurerm_private_dns_zone_virtual_network_link" "acr" {
+      + id                    = (known after apply)
+      + name                  = "acr-dns-link"
+      + private_dns_zone_name = "privatelink.azurecr.io"
+      + registration_enabled  = false
+      + resolution_policy     = (known after apply)
+      + resource_group_name   = "pubsec-info-assistant-dev-rg"
+      + tags                  = {
+          + "Compliance"  = "FedRAMP-High"
+          + "CostCenter"  = "IT-Development"
+          + "Department"  = "Engineering"
+          + "Environment" = "dev"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "devops@example.com"
+          + "Project"     = "pubsec-info-assistant"
+          + "Purpose"     = "Development"
+        }
+      + virtual_network_id    = (known after apply)
+    }
+
+  # module.networking.azurerm_private_dns_zone_virtual_network_link.aks[0] will be created
+  + resource "azurerm_private_dns_zone_virtual_network_link" "aks" {
+      + id                    = (known after apply)
+      + name                  = "aks-dns-link"
+      + private_dns_zone_name = "privatelink.eastus.azmk8s.io"
+      + registration_enabled  = false
+      + resolution_policy     = (known after apply)
+      + resource_group_name   = "pubsec-info-assistant-dev-rg"
+      + tags                  = {
+          + "Compliance"  = "FedRAMP-High"
+          + "CostCenter"  = "IT-Development"
+          + "Department"  = "Engineering"
+          + "Environment" = "dev"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "devops@example.com"
+          + "Project"     = "pubsec-info-assistant"
+          + "Purpose"     = "Development"
+        }
+      + virtual_network_id    = (known after apply)
+    }
+
+  # module.networking.azurerm_private_dns_zone_virtual_network_link.keyvault[0] will be created
+  + resource "azurerm_private_dns_zone_virtual_network_link" "keyvault" {
+      + id                    = (known after apply)
+      + name                  = "keyvault-dns-link"
+      + private_dns_zone_name = "privatelink.vaultcore.azure.net"
+      + registration_enabled  = false
+      + resolution_policy     = (known after apply)
+      + resource_group_name   = "pubsec-info-assistant-dev-rg"
+      + tags                  = {
+          + "Compliance"  = "FedRAMP-High"
+          + "CostCenter"  = "IT-Development"
+          + "Department"  = "Engineering"
+          + "Environment" = "dev"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "devops@example.com"
+          + "Project"     = "pubsec-info-assistant"
+          + "Purpose"     = "Development"
+        }
+      + virtual_network_id    = (known after apply)
+    }
+
+  # module.networking.azurerm_subnet.aks will be created
+  + resource "azurerm_subnet" "aks" {
+      + address_prefixes                              = [
+          + "10.0.0.0/20",
+        ]
+      + default_outbound_access_enabled               = true
+      + id                                            = (known after apply)
+      + name                                          = "aks-subnet"
+      + private_endpoint_network_policies             = "Disabled"
+      + private_link_service_network_policies_enabled = true
+      + resource_group_name                           = "pubsec-info-assistant-dev-rg"
+      + virtual_network_name                          = "pubsec-info-assistant-dev-vnet"
+    }
+
+  # module.networking.azurerm_subnet.appgw will be created
+  + resource "azurerm_subnet" "appgw" {
+      + address_prefixes                              = [
+          + "10.0.16.0/20",
+        ]
+      + default_outbound_access_enabled               = true
+      + id                                            = (known after apply)
+      + name                                          = "appgw-subnet"
+      + private_endpoint_network_policies             = "Disabled"
+      + private_link_service_network_policies_enabled = true
+      + resource_group_name                           = "pubsec-info-assistant-dev-rg"
+      + virtual_network_name                          = "pubsec-info-assistant-dev-vnet"
+    }
+
+  # module.networking.azurerm_subnet.database will be created
+  + resource "azurerm_subnet" "database" {
+      + address_prefixes                              = [
+          + "10.0.48.0/20",
+        ]
+      + default_outbound_access_enabled               = true
+      + id                                            = (known after apply)
+      + name                                          = "database-subnet"
+      + private_endpoint_network_policies             = "Disabled"
+      + private_link_service_network_policies_enabled = true
+      + resource_group_name                           = "pubsec-info-assistant-dev-rg"
+      + service_endpoints                             = [
+          + "Microsoft.Sql",
+          + "Microsoft.Storage",
+        ]
+      + virtual_network_name                          = "pubsec-info-assistant-dev-vnet"
+    }
+
+  # module.networking.azurerm_subnet.private_endpoint will be created
+  + resource "azurerm_subnet" "private_endpoint" {
+      + address_prefixes                              = [
+          + "10.0.32.0/20",
+        ]
+      + default_outbound_access_enabled               = true
+      + id                                            = (known after apply)
+      + name                                          = "private-endpoint-subnet"
+      + private_endpoint_network_policies             = "Disabled"
+      + private_link_service_network_policies_enabled = true
+      + resource_group_name                           = "pubsec-info-assistant-dev-rg"
+      + virtual_network_name                          = "pubsec-info-assistant-dev-vnet"
+    }
+
+  # module.networking.azurerm_subnet_network_security_group_association.aks will be created
+  + resource "azurerm_subnet_network_security_group_association" "aks" {
+      + id                        = (known after apply)
+      + network_security_group_id = (known after apply)
+      + subnet_id                 = (known after apply)
+    }
+
+  # module.networking.azurerm_virtual_network.vnet will be created
+  + resource "azurerm_virtual_network" "vnet" {
+      + address_space                  = [
+          + "10.0.0.0/16",
+        ]
+      + dns_servers                    = (known after apply)
+      + guid                           = (known after apply)
+      + id                             = (known after apply)
+      + location                       = "eastus"
+      + name                           = "pubsec-info-assistant-dev-vnet"
+      + private_endpoint_vnet_policies = "Disabled"
+      + resource_group_name            = "pubsec-info-assistant-dev-rg"
+      + subnet                         = (known after apply)
+      + tags                           = {
+          + "Compliance"  = "FedRAMP-High"
+          + "CostCenter"  = "IT-Development"
+          + "Department"  = "Engineering"
+          + "Environment" = "dev"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "devops@example.com"
+          + "Project"     = "pubsec-info-assistant"
+          + "Purpose"     = "Development"
+        }
+    }
+
+Plan: 31 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + acr_id                                   = (known after apply)
+  + acr_login_server                         = (known after apply)
+  + aks_cluster_id                           = (known after apply)
+  + aks_cluster_name                         = "pubsec-info-assistant-dev-aks"
+  + aks_get_credentials_command              = "az aks get-credentials --resource-group pubsec-info-assistant-dev-rg --name pubsec-info-assistant-dev-aks"
+  + application_insights_connection_string   = (sensitive value)
+  + application_insights_instrumentation_key = (sensitive value)
+  + keyvault_id                              = (known after apply)
+  + keyvault_uri                             = (known after apply)
+  + log_analytics_workspace_id               = (known after apply)
+  + outputs_summary                          = {
+      + acr            = {
+          + id           = (known after apply)
+          + login_server = (known after apply)
+          + name         = "pubsecinfoassistantdevacr"
+        }
+      + aks            = {
+          + cluster_fqdn               = (known after apply)
+          + cluster_id                 = (known after apply)
+          + cluster_name               = "pubsec-info-assistant-dev-aks"
+          + get_credentials_command    = "az aks get-credentials --resource-group pubsec-info-assistant-dev-rg --name pubsec-info-assistant-dev-aks"
+          + kubelet_identity_object_id = (known after apply)
+          + node_resource_group        = (known after apply)
+        }
+      + keyvault       = {
+          + id   = (known after apply)
+          + name = "pubsecinfoassistantdevkv"
+          + uri  = (known after apply)
+        }
+      + monitoring     = {
+          + application_insights_name    = "pubsec-info-assistant-dev-ai"
+          + log_analytics_workspace_id   = (known after apply)
+          + log_analytics_workspace_name = "pubsec-info-assistant-dev-law"
+        }
+      + networking     = {
+          + aks_subnet_id   = (known after apply)
+          + appgw_subnet_id = (known after apply)
+          + vnet_id         = (known after apply)
+          + vnet_name       = "pubsec-info-assistant-dev-vnet"
+        }
+      + resource_group = {
+          + id       = (known after apply)
+          + location = "eastus"
+          + name     = "pubsec-info-assistant-dev-rg"
+        }
+    }
+  + resource_group_name                      = "pubsec-info-assistant-dev-rg"
+  + sensitive_outputs                        = (sensitive value)
+  + vnet_id                                  = (known after apply)

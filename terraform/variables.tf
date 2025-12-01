@@ -99,7 +99,7 @@ variable "acr_geo_replication_locations" {
 variable "aks_kubernetes_version" {
   description = "Kubernetes version for AKS cluster"
   type        = string
-  default     = "1.28.3"
+  default     = "1.33.5"
 }
 
 variable "aks_automatic_channel_upgrade" {
@@ -125,13 +125,13 @@ variable "aks_sku_tier" {
 variable "aks_dns_service_ip" {
   description = "DNS service IP for AKS"
   type        = string
-  default     = "10.0.4.10"
+  default     = "10.2.0.10"
 }
 
 variable "aks_service_cidr" {
   description = "Service CIDR for AKS"
   type        = string
-  default     = "10.0.4.0/24"
+  default     = "10.2.0.0/16"
 }
 
 variable "aks_docker_bridge_cidr" {
