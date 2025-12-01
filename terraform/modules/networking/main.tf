@@ -6,7 +6,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.80"
+      version = "~> 4.0"
     }
   }
 }
@@ -55,7 +55,10 @@ resource "azurerm_subnet" "private_endpoint" {
   resource_group_name                       = var.resource_group_name
   virtual_network_name                      = azurerm_virtual_network.vnet.name
   address_prefixes                          = [var.private_endpoint_cidr]
-  private_endpoint_network_policies_enabled = false
+  # AzureRM < v4: use the boolean flag below
+  # private_endpoint_network_policies_enabled = false
+  # AzureRM >= v4: switch to the string property shown here
+  private_endpoint_network_policies = "Disabled"
 }
 
 # Database Subnet

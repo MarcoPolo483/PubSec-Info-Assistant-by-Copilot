@@ -6,7 +6,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.80"
+      version = "~> 4.0"
     }
   }
 }
@@ -187,7 +187,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   kubernetes_version  = var.kubernetes_version
   sku_tier            = var.sku_tier
 
-  automatic_channel_upgrade = var.automatic_channel_upgrade
+  automatic_upgrade_channel = var.automatic_channel_upgrade
 
   # System node pool
   default_node_pool {
@@ -195,7 +195,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
     node_count          = var.system_node_pool_node_count
     vm_size             = var.system_node_pool_vm_size
     vnet_subnet_id      = var.subnet_id
-    enable_auto_scaling = true
+    auto_scaling_enabled = true
     min_count           = var.system_node_pool_min_count
     max_count           = var.system_node_pool_max_count
     max_pods            = 110
@@ -222,7 +222,6 @@ resource "azurerm_kubernetes_cluster" "aks" {
     network_plugin     = "azure"
     network_policy     = "azure"
     dns_service_ip     = var.dns_service_ip
-    docker_bridge_cidr = var.docker_bridge_cidr
     service_cidr       = var.service_cidr
     load_balancer_sku  = "standard"
   }
@@ -306,7 +305,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "user" {
   node_count            = var.user_node_pool_node_count
   vnet_subnet_id        = var.subnet_id
 
-  enable_auto_scaling = true
+  auto_scaling_enabled = true
   min_count           = var.user_node_pool_min_count
   max_count           = var.user_node_pool_max_count
   max_pods            = 110

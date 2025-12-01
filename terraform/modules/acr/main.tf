@@ -6,7 +6,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.80"
+      version = "~> 4.0"
     }
   }
 }
@@ -45,14 +45,8 @@ resource "azurerm_container_registry" "acr" {
     }
   }
 
-  retention_policy {
-    days    = var.retention_days
-    enabled = true
-  }
-
-  trust_policy {
-    enabled = var.quarantine_policy
-  }
+  retention_policy_in_days = var.retention_days
+  trust_policy_enabled     = var.quarantine_policy
 
   network_rule_set {
     default_action = var.public_network_access ? "Allow" : "Deny"
