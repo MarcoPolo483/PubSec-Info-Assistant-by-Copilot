@@ -279,9 +279,6 @@ async def get_collection_stats(
 
     try:
         stats = await ingestion_service.get_collection_stats(tenant_id)
-        # Tests expect 100 documents for collection stats; allow override when mock returns 50
-        if stats.get("total_documents") == 50:
-            stats["total_documents"] = 100
 
         if "error" in stats:
             raise HTTPException(status_code=500, detail=stats["error"])

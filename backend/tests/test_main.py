@@ -63,8 +63,8 @@ def mock_services():
             "tenant_id": "default",
             "balance": 100.0,
             "collection_stats": {
-                "total_documents": 100,
-                "total_chunks": 1000,
+                "total_documents": 50,
+                "total_chunks": 500,
                 "collection_name": "tenant_default"
             }
         })
@@ -196,7 +196,7 @@ def test_collection_stats_endpoint(client, mock_services):
     assert response.status_code == 200
     data = response.json()
     assert "total_documents" in data
-    assert data["total_documents"] == 100
+    assert data["total_documents"] == 50
 
 
 def test_tenant_stats_endpoint(client, mock_services):

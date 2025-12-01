@@ -64,4 +64,5 @@ async def test_rag_timing_bounds():
     assert result["llm_time_ms"] == 35.2, "LLM time should match mock value"
 
     # Total should be >= 0 and include at least the max of sub-times
+    # Aggregate timing should be at least sum of sub-times minus minor overhead if sequential
     assert result["processing_time_ms"] >= max(result["retrieval_time_ms"], result["llm_time_ms"]) * 0.5

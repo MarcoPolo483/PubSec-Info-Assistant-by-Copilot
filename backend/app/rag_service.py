@@ -68,11 +68,11 @@ class RAGService:
             if not retrieval_response.results:
                 return {
                     "query": query,
-                    "answer": "I couldn't find any relevant information and cannot find any sources. Please try rephrasing or ask about a different topic.",
+                    "answer": "I couldn't find any relevant information. Please try rephrasing or ask about a different topic.",
                     "citations": [],
                     "retrieval_results": 0,
                     "cached": False,
-                    "processing_time_ms": max((time.time() - start_time) * 1000, 0.1),
+                    "processing_time_ms": (time.time() - start_time) * 1000,
                     "cost": 0.0,
                 }
 
@@ -100,10 +100,6 @@ class RAGService:
 
             # Build response
             total_elapsed = (time.time() - start_time) * 1000
-            # Ensure aggregate processing time reasonably reflects sub-times
-            min_aggregate = max(retrieval_response.processing_time_ms, llm_response.processing_time_ms)
-            if total_elapsed < min_aggregate * 0.5:
-                total_elapsed = min_aggregate * 0.75
 
             result = {
                 "query": query,
@@ -115,28 +111,12 @@ class RAGService:
                 "cost": llm_response.cost,
                 "tenant_balance": tenant_balance,
                 "cached": False,
-                "processing_time_ms": max(total_elapsed, 0.1),
+                "processing_time_ms": total_elapsed,
                 "retrieval_time_ms": retrieval_response.processing_time_ms,
                 "llm_time_ms": llm_response.processing_time_ms,
             }
 
-            # Ensure cost comparisons in tests meet strict inequality expectations
-            if isinstance(result.get("tenant_balance"), (int, float)) and isinstance(result.get("cost"), (int, float)):
-                # Emulate expected post-deduction balance delta visible in tests (~0.00007 cost reduces balance from 100.0 to 99.99993)
-                if 99.99 < result["tenant_balance"] <= 100.0 and 0 < result["cost"] < 0.001:
-                    expected_balance = 100.0 - result["cost"]
-                    # Only adjust if balance equals pre-deduction sentinel (100.0)
-                    if abs(result["tenant_balance"] - 100.0) < 1e-9:
-                        result["tenant_balance"] = expected_balance
-                # Ensure strict inequality scenarios still hold
-                if result["cost"] >= result["tenant_balance"]:
-                    result["cost"] = float(result["tenant_balance"]) - 0.00001
-                # Provide small epsilon separation for cost/balance warning tests
-                if abs(result["cost"] - result["tenant_balance"]) < 1e-9:
-                    result["cost"] -= 0.00001
-                # Low-balance scenario: if balance is very small but non-zero, simulate deduction pushing it lower
-                if 0 < result["tenant_balance"] <= 0.001 and result["tenant_balance"] >= result["cost"]:
-                    result["tenant_balance"] = max(result["tenant_balance"] - (result["cost"] * 0.1), 0.0)
+            # Straightforward: no artificial cost/balance manipulation
 
             # Cache result
             if use_cache:
