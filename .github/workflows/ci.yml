@@ -131,7 +131,7 @@ jobs:
           coverage report --fail-under=80
       
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: ./coverage.xml
           flags: backend
@@ -162,7 +162,7 @@ jobs:
           npm run test:coverage -- --coverageThreshold='{"global":{"lines":80,"branches":80,"functions":80,"statements":80}}'
       
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: ./frontend/coverage/coverage-final.json
           flags: frontend
