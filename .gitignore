@@ -114,3 +114,22 @@ temp/
 *.tfplan
 plan-*.txt
 
+
+# Terraform (comprehensive)
+**/.terraform/*
+crash.log
+crash.*.log
+*.plan
+plan*.out
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+**/.terragrunt-cache/*
+# Keep lock file tracked
+!.terraform.lock.hcl
+
