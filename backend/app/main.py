@@ -318,14 +318,15 @@ async def query(
             top_k=top_k,
         )
 
-        # Add cost tracking headers
+        # Add cost tracking headers (robust against missing token fields)
         headers = {}
         if settings.cost_tracking_enabled and "cost" in result:
             headers["X-Request-Cost"] = f"{result['cost']:.4f}"
-            headers["X-Token-Usage"] = (
-                f"input:{result['tokens_used']['input']},"
-                f"output:{result['tokens_used']['output']}"
-            )
+            tokens_used = result.get("tokens_used")
+            if isinstance(tokens_used, dict):
+                input_tokens = tokens_used.get("input", tokens_used.get("prompt", 0))
+                output_tokens = tokens_used.get("output", tokens_used.get("completion", 0))
+                headers["X-Token-Usage"] = f"input:{input_tokens},output:{output_tokens}"
             if "tenant_balance" in result:
                 headers["X-Tenant-Balance"] = f"balance:{result['tenant_balance']:.2f}"
 
