@@ -27,7 +27,7 @@ redis[hiredis]==5.2.0
 # Observability
 prometheus-client==0.21.0
 opentelemetry-api==1.28.1
-opentelemetry-sdk==1.28.1
+opentelemetry-sdk==1.38.0
 opentelemetry-instrumentation-fastapi==0.49b1
 
 # Testing
