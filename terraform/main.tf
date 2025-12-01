@@ -11,7 +11,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.80"
+      version = "~> 4.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
@@ -81,6 +81,14 @@ locals {
   appgw_subnet_cidr     = cidrsubnet(local.vnet_address_space[0], 4, 1)
   private_endpoint_cidr = cidrsubnet(local.vnet_address_space[0], 4, 2)
   database_subnet_cidr  = cidrsubnet(local.vnet_address_space[0], 4, 3)
+
+  # Derive AKS service CIDR/DNS if not explicitly provided.
+  # Default to RFC1918 range outside common 10.0.0.0/8 VNet spaces.
+  derived_service_cidr = "172.20.0.0/16"
+  derived_dns_service_ip = "172.20.0.10"
+
+  use_service_cidr    = try(var.aks_service_cidr, "") != "" ? var.aks_service_cidr : local.derived_service_cidr
+  use_dns_service_ip  = try(var.aks_dns_service_ip, "") != "" ? var.aks_dns_service_ip : local.derived_dns_service_ip
 }
 
 # =============================================================================
@@ -160,9 +168,9 @@ module "aks" {
   # Network configuration
   vnet_id            = module.networking.vnet_id
   subnet_id          = module.networking.aks_subnet_id
-  dns_service_ip     = var.aks_dns_service_ip
+  dns_service_ip     = local.use_dns_service_ip
   docker_bridge_cidr = var.aks_docker_bridge_cidr
-  service_cidr       = var.aks_service_cidr
+  service_cidr       = local.use_service_cidr
 
   # Cluster configuration
   kubernetes_version        = var.aks_kubernetes_version
