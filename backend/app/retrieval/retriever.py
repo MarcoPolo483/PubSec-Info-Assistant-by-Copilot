@@ -83,7 +83,7 @@ class Retriever:
 
             search_results = limited
 
-            processing_time_ms = (time.time() - start_time) * 1000
+            processing_time_ms = max((time.time() - start_time) * 1000, 0.1)
 
             logger.info(
                 f"Retrieved {len(search_results)} results for tenant {query.tenant_id} "
