@@ -7,6 +7,10 @@ on:
         description: 'Target base URL (e.g., https://env.example.gov)'
         required: true
         type: string
+      api_path:
+        description: 'API path for chat/ask endpoint (e.g., /api/chat)'
+        required: false
+        type: string
       auth_username:
         description: 'Auth username (optional if bearer token used)'
         required: false
@@ -23,6 +27,11 @@ on:
         description: 'X-Tenant-ID header for multi-tenant tests (optional)'
         required: false
         type: string
+      pi_enabled:
+        description: 'Run prompt-injection test suite'
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   contents: write
@@ -67,7 +76,28 @@ jobs:
             git push
           fi
 
-      - name: Prompt Injection Test Suite (placeholder)
+      - name: Setup Python for Prompt-Injection tests
+        if: ${{ inputs.pi_enabled }}
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
+        with:
+          python-version: '3.11'
+
+      - name: Install deps for PI tests
+        if: ${{ inputs.pi_enabled }}
         run: |
-          echo "Add your prompt-injection tests here (garak or custom)."
-          echo "Archive results to evidence/dast/prompt-injection/"
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Run Prompt-Injection Test Suite (custom)
+        if: ${{ inputs.pi_enabled }}
+        env:
+          TARGET_URL: ${{ inputs.target_url }}
+          API_PATH: ${{ inputs.api_path }}
+          BEARER_TOKEN: ${{ inputs.bearer_token }}
+          AUTH_USERNAME: ${{ inputs.auth_username }}
+          AUTH_PASSWORD: ${{ inputs.auth_password }}
+          TENANT_ID: ${{ inputs.tenant_id }}
+        run: |
+          mkdir -p evidence/dast/prompt-injection
+          python .github/security/prompt_injection_tests.py || true
+          cp -f prompt-injection-results.json evidence/dast/prompt-injection/results.json 2>/dev/null || true

@@ -82,6 +82,13 @@ jobs:
         run: |
           checkov -d . -o json | tee evidence/iac/checkov.json || true
 
+      - name: tfsec IaC scan
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          format: json
+          soft_fail: true
+          additional_args: --out evidence/iac/tfsec.json
+
       - name: Commit evidence artifacts
         run: |
           git config user.name "github-actions[bot]"

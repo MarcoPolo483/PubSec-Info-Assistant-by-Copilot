@@ -1,0 +1,68 @@
+name: Container Security Scans
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  container-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@b14b9d46c9db0620fdc75c680e8cbccb247dcf63 # v0.2.2
+
+      - name: Ensure evidence directories
+        run: |
+          mkdir -p evidence/container
+
+      - name: Build backend image if Dockerfile exists
+        id: build_backend
+        run: |
+          if [ -f Dockerfile.backend ]; then \
+            docker build -f Dockerfile.backend -t local/backend:ci . ; \
+            echo "built=true" >> $GITHUB_OUTPUT ; \
+          else \
+            echo "built=false" >> $GITHUB_OUTPUT ; \
+          fi
+
+      - name: Scan backend image with Trivy
+        if: steps.build_backend.outputs.built == 'true'
+        run: |
+          trivy image --format json --output evidence/container/trivy-backend.json local/backend:ci || true
+
+      - name: Build frontend image if Dockerfile exists
+        id: build_frontend
+        run: |
+          if [ -f Dockerfile.frontend ]; then \
+            docker build -f Dockerfile.frontend -t local/frontend:ci . ; \
+            echo "built=true" >> $GITHUB_OUTPUT ; \
+          else \
+            echo "built=false" >> $GITHUB_OUTPUT ; \
+          fi
+
+      - name: Scan frontend image with Trivy
+        if: steps.build_frontend.outputs.built == 'true'
+        run: |
+          trivy image --format json --output evidence/container/trivy-frontend.json local/frontend:ci || true
+
+      - name: Commit container scan evidence (if changed)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add evidence/container || true
+          if git diff --cached --quiet; then
+            echo "No container evidence changes to commit."
+          else
+            git commit -m "chore(evidence): container image scan reports"
+            git push
+          fi
