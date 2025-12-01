@@ -2,6 +2,7 @@
 Terraform used the selected providers to generate the following execution
 plan. Resource actions are indicated with the following symbols:
   + create
+<<<<<<< HEAD
  <= read (data resources)
 
 Terraform will perform the following actions:
@@ -22,6 +23,10 @@ Terraform will perform the following actions:
           + "Purpose"     = "Development"
         }
     }
+=======
+
+Terraform planned the following actions, but then encountered a problem:
+>>>>>>> 47ab823 (chore(repo): save all pending changes 2025-12-01)
 
   # random_password.app_secret_key will be created
   + resource "random_password" "app_secret_key" {
@@ -74,6 +79,7 @@ Terraform will perform the following actions:
       + upper       = true
     }
 
+<<<<<<< HEAD
   # module.acr.azurerm_container_registry.acr will be created
   + resource "azurerm_container_registry" "acr" {
       + admin_enabled                 = false
@@ -867,3 +873,6 @@ Changes to Outputs:
   + resource_group_name                      = "pubsec-info-assistant-dev-rg"
   + sensitive_outputs                        = (sensitive value)
   + vnet_id                                  = (known after apply)
+=======
+Plan: 3 to add, 0 to change, 0 to destroy.
+>>>>>>> 47ab823 (chore(repo): save all pending changes 2025-12-01)
