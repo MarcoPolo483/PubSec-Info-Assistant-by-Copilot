@@ -1,17 +1,16 @@
 # EVA Domain Assistant 2.0 🏛️
 
-[![CI](https://github.com/EVA-Suite/eva-da-2/actions/workflows/ci.yml/badge.svg)](https://github.com/EVA-Suite/eva-da-2/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/EVA-Suite/eva-da-2/branch/main/graph/badge.svg)](https://codecov.io/gh/EVA-Suite/eva-da-2)
+[![CI](https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot/actions/workflows/ci.yml/badge.svg)](https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
-[![Tests](https://img.shields.io/badge/tests-142%20of%20154%20passing-brightgreen.svg)](./tests/)
-[![Coverage](https://img.shields.io/badge/coverage-85.32%25-success.svg)](./tests/)
+[![Tests](https://img.shields.io/badge/tests-154%20of%20154%20passing-brightgreen.svg)](./tests/)
+[![Coverage](https://img.shields.io/badge/coverage-85.40%25-success.svg)](./tests/)
 [![WCAG](https://img.shields.io/badge/WCAG-2.2%20AA%2B-blue.svg)](./docs/compliance/WCAG-STATEMENT.md)
 [![SOC2](https://img.shields.io/badge/SOC2-Type%20II-green.svg)](./docs/compliance/SOC2-COMPLIANCE.md)
 [![Documentation](https://img.shields.io/badge/documentation-complete-brightgreen.svg)](./docs/)
 
-Note: CI trigger metadata bump (2025-11-30) to validate pipelines.
+Note: CI trigger metadata bump (2025-12-01) to validate pipelines.
 
 ## API Keys & Rate Limits
 
@@ -31,7 +30,7 @@ schemathesis run http://localhost:8000/openapi.json --checks all --workers 2
 
 Built by **autonomous AI agents** following enterprise best practices. Production-ready with 80%+ test coverage, comprehensive security, full observability, and LiveOps capabilities.
 
-**🎯 Status**: ✅ Production Ready for International Deployment | 📚 100% Documented | 🧪 154 Tests (142 passing, 85.32% coverage) | ♿ WCAG 2.2 AA+ | 🔒 SOC 2 Type II | 🌍 Multi-Language Support | 🚀 15-Minute Demo
+**🎯 Status**: ✅ Production Ready for International Deployment | 📚 100% Documented | 🧪 154 Tests (154 passing, 85.40% coverage) | ♿ WCAG 2.2 AA+ | 🔒 SOC 2 Type II | 🌍 Multi-Language Support | 🚀 15-Minute Demo
 
 📖 **[Complete Demo Guide](./DEMO-GUIDE.md)** | 📋 **[P0 Incident Runbooks](./docs/runbooks/P0-INCIDENTS.md)** | 🔄 **[Disaster Recovery Plan](./docs/runbooks/DISASTER-RECOVERY.md)** | 🔒 **[SOC2 Compliance](./docs/compliance/SOC2-COMPLIANCE.md)** | ♿ **[WCAG Statement](./docs/compliance/WCAG-STATEMENT.md)**
 
@@ -74,8 +73,8 @@ EVA Domain Assistant 2.0 answers policy, process, and public-sector information 
 ### 1. Clone and Setup
 
 ```bash
-git clone https://github.com/EVA-Suite/eva-da-2.git
-cd eva-da-2
+git clone https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot.git
+cd PubSec-Info-Assistant-by-Copilot
 
 # Copy environment template
 cp .env.example .env
@@ -311,10 +310,10 @@ Real-time cost dashboards available in Grafana at `/dashboards/cost-tracking`
 
 ### Test Coverage
 
-✅ **85.32% code coverage** achieved across 154 comprehensive tests
+✅ **85.40% code coverage** achieved across 154 comprehensive tests
 
 **Test Suite Breakdown**:
-- **154 total tests** (142 passing, 12 minor failures in edge cases)
+- **154 total tests** (154 passing)
 - **Unit tests**: 120+ tests covering core business logic
 - **Integration tests**: 25+ tests for API endpoints and service integration
 - **E2E tests**: 9+ tests for complete user workflows
