@@ -1,0 +1,95 @@
+name: Evidence Archive
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-archive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup Python
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
+        with:
+          python-version: '3.11'
+
+      - name: Install Python tooling
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit pip-audit semgrep
+
+      - name: Ensure evidence directories
+        run: |
+          mkdir -p evidence/sast evidence/sca evidence/sbom
+
+      - name: Bandit (Python SAST)
+        run: |
+          bandit -r backend -f json -o evidence/sast/bandit.json || true
+
+      - name: pip-audit (Python SCA)
+        run: |
+          pip-audit -r backend/requirements.txt -f json -o evidence/sca/python-pip-audit.json || true
+
+      - name: Semgrep (OWASP Top 10)
+        run: |
+          semgrep --version
+          semgrep ci --config p/owasp-top-ten --exclude-rule generic.secrets.security.detected --metrics=off || true
+          # Save SARIF if produced by semgrep; else skip
+
+      - name: Node setup (if frontend exists)
+        if: exists('frontend/package.json')
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        with:
+          node-version: '20'
+
+      - name: npm audit (frontend)
+        if: exists('frontend/package.json')
+        run: |
+          cd frontend
+          npm install --ignore-scripts --no-audit --no-fund
+          npm audit --json > ../evidence/sca/npm-audit.json || true
+
+      - name: Generate SBOM (repo) using Anchore
+        uses: anchore/sbom-action@v0
+        with:
+          format: cyclonedx-json
+          output-file: evidence/sbom/sbom-repo.cdx.json
+
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@b14b9d46c9db0620fdc75c680e8cbccb247dcf63 # v0.2.2
+
+      - name: Trivy filesystem scan (dependencies)
+        run: |
+          trivy fs --scanners vuln --format json --output evidence/sca/trivy-fs.json . || true
+
+      - name: Trivy config scan (IaC)
+        run: |
+          trivy config --format json --output evidence/iac/trivy-config.json . || true
+
+      - name: Install Checkov
+        run: |
+          python -m pip install --upgrade pip
+          pip install checkov
+
+      - name: Checkov IaC scan
+        run: |
+          checkov -d . -o json | tee evidence/iac/checkov.json || true
+
+      - name: Commit evidence artifacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add evidence || true
+          if git diff --cached --quiet; then
+            echo "No evidence changes to commit."
+          else
+            git commit -m "chore(evidence): archive SAST/SCA/SBOM reports"
+            git push
+          fi

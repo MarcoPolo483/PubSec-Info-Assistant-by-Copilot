@@ -54,31 +54,63 @@ The TRA identifies threats, vulnerabilities, and risks to the system and establi
 | Area | Assessment Focus | Repo Evidence Reference |
 |------|------------------|------------------------|
 | External Attack Vectors | API exposure, web frontend, ingress | `k8s/base/ingress.yaml`, `k8s/base/network-policy.yaml` |
-| LLM-Specific Risks | Prompt injection, data exfiltration, hallucination | `SECURITY.md` (LLM Security section), `backend/app/rag_service.py` |
+| LLM-Specific Risks | Prompt injection, data exfiltration, hallucination | `SECURITY.md` (LLM Security section), `backend/app/rag_service.py`, `docs/SECURITY-SYSTEM-PROFILE.md` Section 4.6 |
 | Data at Rest | Vector embeddings, cache, tenant data | `docker-compose.yml` (Qdrant, Redis volumes) |
 | Supply Chain | Dependencies, base images, third-party code | `Dockerfile.backend`, `Dockerfile.frontend`, `backend/requirements.txt`, `frontend/package.json` |
 | Identity & Access | Azure OpenAI API keys, service principals | `k8s/base/secrets.yaml.example`, **TODO**: Azure RBAC config |
 | Multi-Tenancy | Cross-tenant data leakage | `SECURITY.md` (Multi-Tenancy section), `backend/app/` tenant isolation logic |
+| **AI-Specific Threats** | **Model integrity, training data poisoning, embeddings leakage** | **`docs/SECURITY-SYSTEM-PROFILE.md` Section 4.6.1-4.6.5** |
+| **AI Model Provenance** | **Model versioning, supply chain, vendor lock-in** | **`docs/SECURITY-SYSTEM-PROFILE.md` Section 4.6.5** |
+| **AI Privacy Risks** | **Model memorization, PII leakage to LLM provider** | **`docs/SECURITY-SYSTEM-PROFILE.md` Section 4.6.3, 9.4** |
+| **AI Availability** | **Resource exhaustion (tokens), API rate limits, DoS** | **`docs/SECURITY-SYSTEM-PROFILE.md` Section 4.6.4** |
 
 **Azure OpenAI Integration:**  
 - See [Key Assumptions](#key-assumptions) A2 regarding Key Vault integration. **TODO**: Validate assumption A2 and document production configuration.
+- **AI-Specific Risk Context**: Cross-border data flow analysis (Section 9.4.5 of SECURITY-SYSTEM-PROFILE) identifies HIGH risk for OpenAI USA endpoints processing Protected B data. **MITIGATION**: Azure OpenAI (Canada regions) recommended for Protected B compliance.
 
 #### Required Evidence
 - [ ] Completed TRA document (threat modeling, risk ratings, mitigations)
 - [ ] Risk register with identified risks, owners, and remediation timelines
 - [ ] Threat model diagrams (STRIDE or similar methodology)
 - [ ] LLM-specific threat assessment (prompt injection, jailbreaking, data leakage)
+- [ ] **AI threat taxonomy covering**:
+  - [ ] **Prompt injection & jailbreaking attempts** (OWASP LLM01)
+  - [ ] **Model integrity risks** (training data poisoning, model corruption)
+  - [ ] **Privacy risks** (model memorization, PII leakage to provider)
+  - [ ] **Availability threats** (token exhaustion, API rate limit DoS)
+  - [ ] **Supply chain risks** (model provenance, vendor lock-in, API dependencies)
+- [ ] **Cross-border data flow risk assessment** (OpenAI USA vs Azure OpenAI Canada for Protected B)
+- [ ] **Multi-tenant threat scenarios** (cross-tenant data leakage via embeddings, cache poisoning)
+- [ ] **Residual risk assessment** for AI-specific threats
+- [ ] **Data sovereignty compliance** (Canadian Protected B data residency requirements)
 
 #### Recommended Tools/Methods
 - **Microsoft Threat Modeling Tool** or **OWASP Threat Dragon** for threat diagrams
 - **FAIR** methodology for risk quantification
 - **NIST SP 800-30** for risk assessment procedures
 - Reference: SECURITY.md Known Security Considerations section
+- **AI-Specific Threat Modeling**:
+  - **OWASP Top 10 for LLM Applications** (2023 edition) - covers prompt injection, supply chain, overreliance risks
+  - **MITRE ATLAS** (Adversarial Threat Landscape for AI Systems) - ATT&CK framework for AI/ML
+  - **NIST AI Risk Management Framework (AI RMF)** - trustworthy AI governance
+  - **Microsoft AI Red Team** playbooks for adversarial testing
+  - **Garak** - LLM vulnerability scanner for prompt injection, jailbreaking
+- **Cross-Border Data Flow Analysis**: Align with SECURITY-SYSTEM-PROFILE Section 9.4.5 (Canada→USA risk matrix)
 
 #### Gaps in Repository
 - **TODO**: Formal TRA document not present in repository
 - **TODO**: Risk register with quantified risk ratings not documented
 - **TODO**: Threat model diagrams for LLM pipeline not included
+- **HIGH PRIORITY GAPS**:
+  - **TODO**: AI-specific threat model not formalized (OWASP LLM Top 10, MITRE ATLAS)
+  - **TODO**: Cross-border data flow risk assessment not documented (OpenAI USA vs Azure Canada for Protected B)
+  - **TODO**: Model integrity risk analysis (training data poisoning, model corruption scenarios)
+  - **TODO**: Multi-tenant threat scenarios not assessed (embeddings leakage, cache poisoning)
+  - **TODO**: Residual risk acceptance documentation for AI-specific threats
+  - **TODO**: Data sovereignty compliance analysis (SECURITY-SYSTEM-PROFILE Section 9.5 requirements not validated)
+- **Referenced Gaps from SECURITY-SYSTEM-PROFILE**:
+  - Section 4.6 AI threats require formal TRA mapping to NIST 800-53 / ITSG-33 controls
+  - Section 9.4.5 cross-border data flow risks need documented risk acceptance or mitigation plan
 
 #### Owner and Priority
 | Owner | Priority |
@@ -113,6 +145,21 @@ The PIA evaluates privacy risks associated with the collection, use, and disclos
 - [ ] Consent collection mechanism documentation
 - [ ] Data retention and disposal procedures
 - [ ] Privacy notice/policy documentation
+- [ ] **PADI-Aligned Evidence** (align with SECURITY-SYSTEM-PROFILE Section 9.4):
+  - [ ] **Collection of Personal Information** (9.4.1) - direct/indirect collection sources
+  - [ ] **Use and Disclosure** (9.4.2) - internal/external sharing, DPA with Azure OpenAI
+  - [ ] **Retention and Disposal** (9.4.3) - timelines per asset type (embeddings: 7 years, logs: 1 year)
+  - [ ] **Safeguards** (9.4.4) - administrative, technical, physical controls
+  - [ ] **Cross-Border Data Flows** (9.4.5) - Canada→USA risk matrix, mitigation strategies
+  - [ ] **Privacy Risks** (9.4.6) - 5 risks documented with likelihood/impact/mitigation
+- [ ] **Data sovereignty compliance evidence** (Section 9.5):
+  - [ ] Azure region configuration (Canada Central/East for Protected B)
+  - [ ] OpenAI API endpoint validation (Azure OpenAI vs OpenAI USA)
+  - [ ] Geo-replication configuration (Canada-only)
+- [ ] **AI-specific privacy evidence**:
+  - [ ] Model memorization risk assessment (PII leakage via embeddings)
+  - [ ] LLM provider data processing agreement (Azure OpenAI DPA)
+  - [ ] PII detection/redaction mechanism (MS Presidio integration status)
 
 #### Recommended Tools/Methods
 - **Treasury Board PADI Template** for PIA structure
@@ -125,6 +172,15 @@ The PIA evaluates privacy risks associated with the collection, use, and disclos
 - **TODO**: Data Processing Agreement with Azure OpenAI not included
 - **TODO**: Consent collection mechanism not implemented/documented
 - **TODO**: Data flow diagrams for PII not included
+- **HIGH PRIORITY GAPS** (align with SECURITY-SYSTEM-PROFILE Section 9.4-9.5):
+  - **TODO**: Cross-border data flow risk assessment incomplete (Section 9.4.5 requires CIO risk acceptance for OpenAI USA)
+  - **TODO**: Model memorization risk not quantified (embeddings may retain PII)
+  - **TODO**: PII detection/redaction not implemented (MS Presidio mentioned in PROJECT-SUMMARY but not integrated)
+  - **TODO**: Azure OpenAI DPA not documented in evidence package
+  - **TODO**: Data sovereignty compliance not validated (Protected B requires Canadian regions - Section 9.5)
+  - **TODO**: Retention schedules not enforced via automation (7-year embeddings, 1-year logs)
+  - **TODO**: Privacy notice for users not documented (consent for AI processing)
+  - **TODO**: Third-party disclosure risk not assessed (Azure OpenAI sub-processors)
 
 #### Owner and Priority
 | Owner | Priority |
@@ -157,6 +213,20 @@ SAST identifies security vulnerabilities in source code before deployment. Requi
 - [ ] Bandit scan results for Python code
 - [ ] Remediation evidence for HIGH/CRITICAL findings
 - [ ] False positive documentation with justifications
+- [ ] **AI-specific SAST evidence**:
+  - [ ] **Prompt injection vulnerability scanning** (input validation, sanitization)
+  - [ ] **API key exposure scanning** (OpenAI keys, Azure credentials in code)
+  - [ ] **Data leakage patterns** (logging sensitive data, embeddings exposure)
+  - [ ] **Multi-tenant isolation checks** (tenant ID validation, data segregation logic)
+  - [ ] **LLM API misuse patterns** (excessive token usage, unvalidated user input to LLM)
+- [ ] **Custom SAST rules for AI/RAG systems**:
+  - [ ] Validate tenant isolation in `backend/app/rag_service.py`
+  - [ ] Check for secrets in LLM prompts or context
+  - [ ] Verify input sanitization before embedding generation
+  - [ ] Audit logging for all LLM API calls (NIST 800-53 AU-2)
+- [ ] **RBAC code review** (align with SECURITY-SYSTEM-PROFILE Section 5.3 permission matrix):
+  - [ ] 7 roles implemented correctly (System Admin, Tenant Admin, Data Steward, Operator, Analyst, Viewer, Auditor)
+  - [ ] Permission checks enforce least privilege (viewer cannot write, analyst cannot delete)
 
 #### Recommended Tools/Methods
 - **CodeQL** (already configured in `.github/workflows/security.yml`)
@@ -168,6 +238,13 @@ SAST identifies security vulnerabilities in source code before deployment. Requi
 - Results artifacts from CodeQL/Semgrep/Bandit runs not archived in repository
 - **TODO**: Export and retain SAST reports in evidence folder for ATO package
 - **TODO**: Document remediation history for any identified vulnerabilities
+- **AI-Specific SAST Gaps**:
+  - **TODO**: Custom SAST rules for prompt injection not configured (Semgrep/CodeQL rules needed)
+  - **TODO**: Multi-tenant isolation logic not validated via SAST (tenant ID validation in `backend/app/rag_service.py`)
+  - **TODO**: LLM API misuse patterns not scanned (excessive token usage, unvalidated prompts)
+  - **TODO**: RBAC permission matrix (SECURITY-SYSTEM-PROFILE Section 5.3) not validated via code review
+  - **TODO**: Data leakage patterns (PII in logs, embeddings) not scanned
+  - **TODO**: API key rotation validation not automated (Azure Key Vault integration check)
 
 #### Owner and Priority
 | Owner | Priority |
@@ -247,6 +324,21 @@ DAST tests the running application for vulnerabilities through active scanning. 
 - [ ] API security testing results (Postman/Burp Suite)
 - [ ] Authentication bypass test results
 - [ ] Remediation evidence for HIGH/MEDIUM findings
+- [ ] **AI-specific DAST evidence**:
+  - [ ] **Prompt injection testing** (malicious prompts, jailbreaking attempts via API)
+  - [ ] **LLM API abuse testing** (token exhaustion, rate limit bypass, excessive requests)
+  - [ ] **Multi-tenant isolation testing** (cross-tenant data access via X-Tenant-ID manipulation)
+  - [ ] **Embeddings exfiltration testing** (unauthorized vector retrieval)
+  - [ ] **Cache poisoning testing** (Redis cross-tenant contamination)
+- [ ] **RAG-specific testing**:
+  - [ ] Context injection attacks (malicious documents in RAG pipeline)
+  - [ ] Hallucination validation (LLM response accuracy, grounding to source docs)
+  - [ ] Retrieval bypass (unauthorized document access via crafted queries)
+- [ ] **Authentication & Authorization testing** (align with SECURITY-SYSTEM-PROFILE Section 5.3):
+  - [ ] OAuth2/JWT validation (RS256 signing, token expiry)
+  - [ ] MFA enforcement (if configured)
+  - [ ] RBAC bypass attempts (viewer attempting admin operations)
+  - [ ] API key validation (X-API-Key header enforcement)
 
 #### Recommended Tools/Methods
 - **OWASP ZAP** (already configured with `.zap/rules.tsv`)
@@ -259,6 +351,14 @@ DAST tests the running application for vulnerabilities through active scanning. 
 - **TODO**: Full (active) ZAP scan not configured (only baseline)
 - **TODO**: API-specific security test collection not documented
 - **TODO**: Authenticated scanning configuration not present
+- **AI-Specific DAST Gaps**:
+  - **TODO**: Prompt injection test suite not created (OWASP LLM01 testing)
+  - **TODO**: Multi-tenant isolation testing not automated (X-Tenant-ID manipulation scenarios)
+  - **TODO**: LLM API abuse testing not documented (token exhaustion, rate limit bypass)
+  - **TODO**: RAG-specific testing not planned (context injection, retrieval bypass)
+  - **TODO**: RBAC testing not automated (7 roles from SECURITY-SYSTEM-PROFILE Section 5.3 need test scenarios)
+  - **TODO**: MFA enforcement testing not documented (ASSUMPTION A3 validation)
+  - **TODO**: Embeddings exfiltration testing not scoped
 
 #### Owner and Priority
 | Owner | Priority |

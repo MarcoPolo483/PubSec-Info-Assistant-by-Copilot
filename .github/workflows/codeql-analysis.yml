@@ -1,0 +1,52 @@
+name: CodeQL Analysis
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 3 * * 1'
+
+permissions:
+  contents: write
+  security-events: write
+
+jobs:
+  analyze:
+    name: Analyze (CodeQL)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python,javascript
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          output: codeql-sarif
+
+      - name: Archive SARIF to evidence/sast
+        run: |
+          mkdir -p evidence/sast
+          cp -f codeql-sarif/*.sarif evidence/sast/ 2>/dev/null || true
+
+      - name: Commit SARIF evidence (if changed)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add evidence/sast || true
+          if git diff --cached --quiet; then
+            echo "No SARIF changes to commit."
+          else
+            git commit -m "chore(evidence): add/update CodeQL SARIF"
+            git push
+          fi

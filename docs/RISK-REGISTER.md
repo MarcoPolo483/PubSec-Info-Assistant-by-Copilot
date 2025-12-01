@@ -177,6 +177,35 @@ AI-specific threat modeling considerations
 - Model integrity and hallucinations require operational mitigations (grounding, human-in-loop)
 - Traceability: store prompts and outputs securely with correlation IDs for forensic analysis, but balance with privacy redaction requirements.
 
+AI threat taxonomy (cross-reference SECURITY-SYSTEM-PROFILE Section 4.6)
+- LLM01 Prompt Injection & Jailbreaking: malicious inputs override system instructions, cause data exfiltration
+  - Mitigations: input validation, content filters, policy prompts, human-in-loop for sensitive actions
+- LLM02 Model Integrity Risks: training data poisoning, corrupted embeddings, compromised model endpoints
+  - Mitigations: provenance checks, whitelist sources, monitor model/version integrity, vendor attestation
+- LLM03 Privacy Risks: model memorization and leakage of PII to provider or via outputs
+  - Mitigations: PII redaction (Presidio), minimization, contractual DPA, differential privacy (where applicable)
+- LLM04 Availability Threats: token/resource exhaustion, API rate-limit abuse, DoS on inference endpoints
+  - Mitigations: quotas, WAF, autoscaling, anomaly detection for excessive token usage
+- LLM05 Supply Chain Risks: third-party model/provider dependency, vendor lock-in, unpinned actions/images
+  - Mitigations: SBOM/SCA, image signing (cosign), pinned actions, multi-vendor strategy
+
+Cross-border data flow risks (SECURITY-SYSTEM-PROFILE Section 9.4.5)
+- Threat: Protected B data or derived artifacts processed in non-Canadian regions (OpenAI USA endpoints)
+- Likelihood: Medium-High (configuration drift or misrouted traffic)
+- Impact: High (data sovereignty breach)
+- Mitigations: Use Azure OpenAI in Canada regions only, enforce geofencing and private endpoints, audit endpoints
+- Residual Risk: Low-Medium (pending CIO risk acceptance if non-Canadian processing is necessary)
+
+Multi-tenancy risks
+- Cross-tenant data leakage via improper header validation (`X-Tenant-ID`), shared caches (Redis), or misconfigured collections (Qdrant)
+- Mitigations: strict tenant scoping in code paths, isolation via prefixes/collections, authenticated Redis, tests in DAST
+- Residual Risk: Medium until automated tests and code reviews validate isolation consistently
+
+RBAC alignment (SECURITY-SYSTEM-PROFILE Section 5.3)
+- Ensure 7 roles enforce least privilege across ingestion, query, admin, audit operations
+- Risk: over-privileged roles enabling data modification or deletion by non-admins
+- Mitigations: enforce permission matrix in code, periodic access reviews, unit/integration tests for role checks
+
 Next steps (actionable)
 1. Owners to confirm or replace ASSUMPTION entries and assign named owners.
 2. Create mitigation tickets for all P0 items and track in project tracker.

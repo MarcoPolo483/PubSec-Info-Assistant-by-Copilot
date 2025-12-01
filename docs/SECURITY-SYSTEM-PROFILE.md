@@ -381,6 +381,62 @@ The system is designed to handle **Protected B** information by default, alignin
 | PII redaction | **TODO**: Integrate Microsoft Presidio | **TODO** |
 | Output validation | Regex-based citation extraction | ✅ Implemented |
 
+### 4.6 AI-Specific Threat Landscape
+
+#### 4.6.1 Prompt Injection & Adversarial Inputs
+
+| Threat Vector | Description | Mitigation | Status |
+|--------------|-------------|------------|--------|
+| **Direct Prompt Injection** | User query attempts to override system instructions (e.g., "Ignore previous instructions and...") | System/user prompt separation; input sanitization; detection patterns | ✅ Partial |
+| **Indirect Prompt Injection** | Malicious content embedded in ingested documents (e.g., hidden instructions in PDFs) | Document sanitization; content scanning; source validation | **TODO** |
+| **Jailbreaking** | Attempts to bypass content filters or safety rails | Azure OpenAI safety settings; output filtering | **TODO** (if using Azure OpenAI) |
+| **Context Manipulation** | Crafted queries to extract unrelated document content | Relevance scoring; context window limits; retrieval threshold | ✅ Implemented |
+
+#### 4.6.2 Model & Data Integrity Risks
+
+| Threat Vector | Description | Mitigation | Status |
+|--------------|-------------|------------|--------|
+| **Training Data Contamination** | N/A (using external API, no training) | API-based model (not trainable by client) | ✅ N/A |
+| **Model Substitution** | Attacker replaces model endpoint | HTTPS/TLS pinning; endpoint validation | ✅ Implemented |
+| **Output Manipulation** | Malicious modification of LLM responses | Citation validation; response hashing; audit logs | ⚠️ Partial |
+| **Data Poisoning (Vector DB)** | Malicious embeddings injected into Qdrant | Tenant isolation; ingestion ACLs; content validation | ✅ Partial |
+
+#### 4.6.3 Privacy & Confidentiality Risks
+
+| Threat Vector | Description | Mitigation | Status |
+|--------------|-------------|------------|--------|
+| **PII Leakage to AI Provider** | Protected B data sent to OpenAI API | **TODO**: PII redaction pre-processing; consider Azure OpenAI Canada | **HIGH PRIORITY** |
+| **Model Memorization** | LLM retains sensitive data from API calls | OpenAI API: 30-day retention (opt-out available); Azure OpenAI: No retention | **ASSUMPTION** |
+| **Cross-Tenant Inference** | Model "learns" from one tenant's data and reveals it to another | API-based (no shared fine-tuning); tenant isolation | ✅ Implemented |
+| **Query History Exposure** | Cached queries reveal sensitive patterns | Redis key encryption; TTL enforcement; access controls | ⚠️ Partial |
+
+#### 4.6.4 Availability & Denial of Service
+
+| Threat Vector | Description | Mitigation | Status |
+|--------------|-------------|------------|--------|
+| **Token Exhaustion** | Attacker consumes tenant quota | Per-tenant rate limiting; cost caps; balance checks | ✅ Implemented |
+| **Embedding Flooding** | Large document uploads exhaust resources | File size limits (50MB); chunk limits; ingestion throttling | ✅ Implemented |
+| **Cache Poisoning** | Attacker fills Redis cache with garbage | Cache eviction policies; per-tenant cache quotas | ⚠️ Partial |
+| **API Rate Limiting Bypass** | Distributed attack from multiple IPs | IP-based rate limiting; CAPTCHA; anomaly detection | **TODO** |
+
+#### 4.6.5 Supply Chain & Dependency Risks
+
+| Threat Vector | Description | Mitigation | Status |
+|--------------|-------------|------------|--------|
+| **Malicious PyPI/npm Package** | Compromised dependency injects backdoor | Dependency pinning; lock files; Dependabot scanning | ✅ Implemented |
+| **Container Image Tampering** | Malicious code in base images | Official images only; image signing; vulnerability scanning | ✅ Implemented |
+| **Model Provider Compromise** | OpenAI/Azure API compromised | Multi-provider fallback; response validation; audit logs | **TODO** |
+
+### 4.7 AI Safety & Ethical Controls
+
+| Control | Implementation | Status |
+|---------|---------------|--------|
+| **Bias Detection** | **TODO**: Monitor for demographic bias in retrieval results | **TODO** |
+| **Explainability** | Citation-based provenance (source document references) | ✅ Implemented |
+| **Human-in-the-Loop** | **TODO**: Flag low-confidence answers for review | **TODO** |
+| **Usage Monitoring** | Query logging; cost tracking; pattern analysis | ✅ Implemented |
+| **Redress Mechanism** | **TODO**: Feedback loop for incorrect answers | **TODO** |
+
 ---
 
 ## 5. Identity Flows
@@ -465,13 +521,83 @@ The system is designed to handle **Protected B** information by default, alignin
 
 **TODO**: Implement RBAC with the following roles:
 
-| Role | Description | Permissions |
-|------|-------------|-------------|
-| **Admin** | System administrator | Full access, tenant management, user management |
-| **Operator** | Operations team | Service monitoring, incident response, no data access |
-| **Analyst** | Document analyst | Query, ingest documents, view results |
-| **Viewer** | Read-only user | Query only, no ingestion |
-| **Auditor** | Compliance/audit | Read-only access to logs and metrics |
+| Role | Description | Permissions | Entra ID Group | Azure RBAC Role |
+|------|-------------|-------------|----------------|-----------------|
+| **System Admin** | Platform administrator | Full access: tenant mgmt, user mgmt, config changes, delete operations | `sg-pubsec-sysadmin` | Owner (scoped to resource group) |
+| **Tenant Admin** | Per-tenant administrator | Tenant-scoped: user mgmt, document ingestion, query, view analytics | `sg-pubsec-tenant-{tenant_id}-admin` | Contributor (scoped to tenant namespace) |
+| **Data Steward** | Document governance | Ingest, update, delete documents; manage collections; no user mgmt | `sg-pubsec-data-steward` | Custom: Data Steward |
+| **Operator** | DevOps/SRE team | Monitor services, restart pods, view logs; no data access, no config changes | `sg-pubsec-operator` | Reader + Monitoring Contributor |
+| **Analyst** | End user (query + ingest) | Query, ingest documents, view own query history | `sg-pubsec-analyst` | Custom: Analyst |
+| **Viewer** | Read-only end user | Query only, view results; no ingestion, no history access | `sg-pubsec-viewer` | Custom: Viewer |
+| **Auditor** | Compliance/security audit | Read-only: audit logs, metrics, config; no data access, no operations | `sg-pubsec-auditor` | Log Analytics Reader + Security Reader |
+
+#### 5.3.1 Permission Matrix
+
+| Operation | System Admin | Tenant Admin | Data Steward | Operator | Analyst | Viewer | Auditor |
+|-----------|:------------:|:------------:|:------------:|:--------:|:-------:|:------:|:-------:|
+| **System Operations** | | | | | | | |
+| Create/Delete Tenant | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Modify System Config | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Restart Services | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| **User Management** | | | | | | | |
+| Manage Users (Global) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Manage Users (Tenant) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Assign Roles | ✅ | ✅ (tenant-scoped) | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Document Operations** | | | | | | | |
+| Ingest Documents | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
+| Delete Documents | ✅ | ✅ | ✅ | ❌ | ⚠️ (own only) | ❌ | ❌ |
+| Update Metadata | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Query Operations** | | | | | | | |
+| Submit Queries | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ |
+| View Query History (All) | ✅ | ✅ (tenant-scoped) | ❌ | ❌ | ❌ | ❌ | ✅ |
+| View Query History (Own) | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ |
+| **Monitoring & Audit** | | | | | | | |
+| View Metrics | ✅ | ✅ (tenant-scoped) | ❌ | ✅ | ❌ | ❌ | ✅ |
+| View Logs | ✅ | ⚠️ (tenant-scoped) | ❌ | ✅ | ❌ | ❌ | ✅ |
+| Access Audit Trail | ✅ | ⚠️ (tenant-scoped) | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Export Compliance Reports | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+
+**Legend**: ✅ Full Access | ⚠️ Limited/Scoped Access | ❌ No Access
+
+#### 5.3.2 Azure RBAC Custom Role Definitions
+
+**TODO**: Create the following custom RBAC roles in Azure:
+
+```json
+{
+  "Name": "PubSec Data Steward",
+  "Description": "Manage documents and collections without user/system administration",
+  "Actions": [
+    "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read",
+    "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write",
+    "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/delete",
+    "Microsoft.ContainerRegistry/registries/pull/read"
+  ],
+  "NotActions": [],
+  "AssignableScopes": ["/subscriptions/{subscription-id}/resourceGroups/{rg-name}"]
+}
+
+{
+  "Name": "PubSec Analyst",
+  "Description": "Query and ingest documents (no admin operations)",
+  "Actions": [
+    "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read",
+    "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write"
+  ],
+  "NotActions": [],
+  "AssignableScopes": ["/subscriptions/{subscription-id}/resourceGroups/{rg-name}"]
+}
+
+{
+  "Name": "PubSec Viewer",
+  "Description": "Read-only query access",
+  "Actions": [
+    "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read"
+  ],
+  "NotActions": [],
+  "AssignableScopes": ["/subscriptions/{subscription-id}/resourceGroups/{rg-name}"]
+}
+```
 
 ### 5.4 Service Principals and Managed Identities
 
@@ -758,6 +884,95 @@ This section maps system capabilities to relevant security control families.
 | Consent management | **TODO**: Implement consent tracking | **TODO** |
 | Right to erasure | Tenant offboarding scripts | ✅ Documented |
 | Data portability | **TODO**: Export functionality | **TODO** |
+
+### 9.4 PADI-Aligned Privacy Analysis
+
+#### 9.4.1 Collection of Personal Information
+
+| Collection Point | Type of PI | Direct/Indirect | Purpose | Consent Required? |
+|-----------------|------------|-----------------|---------|-------------------|
+| Document Upload | Content may contain names, contact info, policy references | Direct (user uploads) | RAG indexing and retrieval | Yes (via terms of service) |
+| Query Submission | User questions may contain PII | Direct (user input) | Answer generation | Yes (via terms of service) |
+| Usage Logs | Timestamps, tenant IDs, query patterns | Indirect (system-generated) | Audit, performance monitoring | No (legitimate operational purpose) |
+| Session Data | Tenant ID, session ID | Indirect (system-generated) | Multi-tenancy, rate limiting | No (technical necessity) |
+
+**ASSUMPTION**: No names, email addresses, or other direct identifiers are collected beyond what users voluntarily include in documents or queries.
+
+#### 9.4.2 Use and Disclosure
+
+| Data Type | Internal Use | External Disclosure | Legal Basis |
+|-----------|-------------|---------------------|-------------|
+| Document Content | Vector indexing, retrieval | OpenAI/Azure OpenAI (API processing) | Contractual (service provision) |
+| Queries | Answer generation, caching | OpenAI/Azure OpenAI (API processing) | Contractual (service provision) |
+| Usage Metrics | Cost tracking, analytics | None (internal only) | Legitimate operational purpose |
+| Audit Logs | Security monitoring, compliance | Auditors (upon request) | Legal obligation |
+
+**CRITICAL**: Document chunks and queries containing Protected B information are transmitted to external AI providers (OpenAI or Azure OpenAI). This constitutes **cross-border data transfer** if using OpenAI's US-based API.
+
+#### 9.4.3 Retention and Disposal
+
+| Data Type | Retention Period | Disposal Method | Status |
+|-----------|-----------------|-----------------|--------|
+| Vector Embeddings | 3 years (configurable) | Qdrant collection deletion + volume wipe | **ASSUMPTION** |
+| Cached Queries | 1 hour (TTL) | Redis automatic expiry | ✅ Implemented |
+| Application Logs | 90 days (rotating) | Automated log rotation | ✅ Implemented |
+| Audit Logs | 7 years | Secure archive, then shred | **ASSUMPTION** |
+| Tenant Data (on offboarding) | Immediate deletion | Collection drop + backup purge | ✅ Documented |
+
+**TODO**: Implement automated data lifecycle management and secure disposal verification.
+
+#### 9.4.4 Safeguards
+
+| Safeguard Type | Implementation | PADI Evidence |
+|---------------|----------------|---------------|
+| **Administrative** | | |
+| Privacy Policy | **TODO**: Publish privacy policy | **TODO** |
+| Staff Training | **TODO**: Privacy awareness training | **TODO** |
+| Data Steward Designation | **TODO**: Assign data steward role | **TODO** |
+| **Technical** | | |
+| Encryption at Rest | AES-256 (cloud provider volume encryption) | **ASSUMPTION**: Verify in infrastructure |
+| Encryption in Transit | TLS 1.3 (all external connections) | ✅ Implemented (verify with SSL Labs scan) |
+| Access Controls | Tenant isolation, RBAC | ✅ Implemented (partial—needs Entra ID) |
+| Audit Logging | Structured JSON logs, request tracing | ✅ Implemented |
+| PII Redaction | **TODO**: Presidio integration | **HIGH PRIORITY** |
+| **Physical** | | |
+| Data Center Security | Cloud provider (Azure/AWS SOC 2 certified) | ✅ Contractual (verify attestations) |
+| Geographic Restrictions | **TODO**: Enforce Canadian data residency | **HIGH PRIORITY** |
+
+#### 9.4.5 Cross-Border Data Flow Analysis
+
+| Data Flow | Source | Destination | Classification | PADI Implication |
+|-----------|--------|-------------|----------------|------------------|
+| Document Chunks → OpenAI API | Canada (assumed) | USA (api.openai.com) | Protected B | **HIGH RISK**: Requires TBS approval for cross-border transfer of Protected B |
+| Queries → OpenAI API | Canada (assumed) | USA (api.openai.com) | Protected B | **HIGH RISK**: Same as above |
+| Document Chunks → Azure OpenAI Canada | Canada | Canada (Azure Canada Central/East) | Protected B | **COMPLIANT** (if configured) |
+| Logs → Azure Log Analytics | Canada | Canada (if configured) | Protected A | ✅ Configurable |
+
+**RECOMMENDATION**: For Protected B compliance, deploy Azure OpenAI in Canadian regions and enforce data residency policies.
+
+#### 9.4.6 Privacy Risks (PADI Format)
+
+| Risk ID | Risk Description | Likelihood | Impact | Inherent Risk | Mitigation | Residual Risk |
+|---------|-----------------|------------|--------|---------------|-----------|---------------|
+| **PR-01** | PII in documents sent to US-based AI provider | High | High | **HIGH** | Use Azure OpenAI Canada; implement PII redaction | **MEDIUM** |
+| **PR-02** | Query history exposes sensitive patterns | Medium | Medium | **MEDIUM** | Implement log redaction; limit retention | **LOW** |
+| **PR-03** | Data breach at AI provider | Low | High | **MEDIUM** | Contractual controls; encryption in transit | **MEDIUM** |
+| **PR-04** | Unauthorized cross-tenant access | Low | High | **MEDIUM** | Tenant isolation (implemented); RBAC | **LOW** |
+| **PR-05** | Insufficient consent for AI processing | Medium | Medium | **MEDIUM** | Update terms of service; explicit consent flow | **LOW** |
+
+### 9.5 Data Sovereignty & Residency
+
+**TODO**: Implement the following controls for Protected B data sovereignty:
+
+| Requirement | Current State | Target State | Priority |
+|-------------|--------------|--------------|----------|
+| **Primary Storage** | Configurable (Qdrant, Redis locations) | Azure Canada Central/East | **HIGH** |
+| **Backup Storage** | Configurable | Azure Canada Central/East (geo-redundant within Canada) | **HIGH** |
+| **AI Processing** | OpenAI USA or Azure OpenAI (configurable) | Azure OpenAI Canada Central/East | **HIGH** |
+| **Logging & Monitoring** | Prometheus/Grafana (local or cloud) | Azure Log Analytics (Canada) | **MEDIUM** |
+| **Container Registry** | GitHub Container Registry (global) | Azure Container Registry (Canada) | **MEDIUM** |
+
+**ASSUMPTION**: Azure OpenAI is available in Canadian regions with appropriate data residency commitments. Verify: [Azure OpenAI Service Regions](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models#model-summary-table-and-region-availability)
 
 ### 9.4 Data Sharing
 

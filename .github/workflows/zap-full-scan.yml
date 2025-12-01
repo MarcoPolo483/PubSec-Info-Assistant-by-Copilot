@@ -1,0 +1,73 @@
+name: ZAP Full Scan (Authenticated)
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: 'Target base URL (e.g., https://env.example.gov)'
+        required: true
+        type: string
+      auth_username:
+        description: 'Auth username (optional if bearer token used)'
+        required: false
+        type: string
+      auth_password:
+        description: 'Auth password (optional)'
+        required: false
+        type: string
+      bearer_token:
+        description: 'Bearer token (optional)'
+        required: false
+        type: string
+      tenant_id:
+        description: 'X-Tenant-ID header for multi-tenant tests (optional)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  zap-full:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Prepare headers
+        id: prep
+        run: |
+          HDRS=""
+          if [ -n "${{ inputs.tenant_id }}" ]; then HDRS="-config globalvars.var.tenant_id=${{ inputs.tenant_id }}"; fi
+          echo "headers=$HDRS" >> $GITHUB_OUTPUT
+
+      - name: ZAP Full Scan
+        uses: zaproxy/action-full-scan@v0.10.0
+        with:
+          target: ${{ inputs.target_url }}
+          allow_issue_writing: false
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '${{ steps.prep.outputs.headers }}'
+
+      - name: Collect ZAP report
+        run: |
+          mkdir -p evidence/dast
+          if [ -f zap-full-scan-report.html ]; then cp zap-full-scan-report.html evidence/dast/zap-full-scan-report.html; fi
+          if [ -f zap-full-scan-report.json ]; then cp zap-full-scan-report.json evidence/dast/zap-full-scan-report.json; fi
+
+      - name: Commit ZAP evidence (if changed)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add evidence/dast || true
+          if git diff --cached --quiet; then
+            echo "No ZAP evidence changes to commit."
+          else
+            git commit -m "chore(evidence): add ZAP full scan reports"
+            git push
+          fi
+
+      - name: Prompt Injection Test Suite (placeholder)
+        run: |
+          echo "Add your prompt-injection tests here (garak or custom)."
+          echo "Archive results to evidence/dast/prompt-injection/"
