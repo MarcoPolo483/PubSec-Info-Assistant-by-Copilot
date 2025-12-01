@@ -17,12 +17,29 @@ The PubSec Information Assistant is a Retrieval-Augmented Generation (RAG) syste
 
 **Key Integration Points:**
 - **Azure OpenAI**: LLM inference and embeddings (GPT-4, text-embedding-ada-002)
-- **Entra ID / Managed Identities**: Authentication and authorization (**ASSUMPTION**: deployment uses Azure managed identities; confirmation required from deployment team)
+- **Entra ID / Managed Identities**: Authentication and authorization
 - **Container-Based Deployment**: Docker and Kubernetes orchestration
 - **Multi-Tenancy**: Tenant-isolated data, cache, and network policies
 
 **Document Scope:**  
 This guide provides actionable requirements for IT Security assessors and privacy reviewers to collect evidence, execute tests, and identify gaps for ATO/PADI readiness.
+
+---
+
+## Key Assumptions
+
+The following assumptions were made during the preparation of this document. Each must be validated by the deployment team before ATO submission.
+
+| ID | Assumption | Validation Required | Owner |
+|----|------------|---------------------|-------|
+| A1 | Production deployment uses Azure Managed Identities for service-to-service authentication | Confirm Azure configuration | IAM Lead |
+| A2 | API keys (OpenAI, Anthropic) are stored in Azure Key Vault and rotated per policy | Confirm Key Vault integration | Security Engineer |
+| A3 | Entra ID (Azure AD) is used for user authentication with MFA enforced | Confirm identity provider configuration | IAM Lead |
+| A4 | Data residency for Azure OpenAI is within approved Canadian/government region | Confirm Azure OpenAI region configuration | Privacy Officer |
+| A5 | Annual penetration testing was completed per SOC2-COMPLIANCE.md references | Obtain pen test report from security team | Security Lead |
+| A6 | Container images are built from official, verified base images | Verify image provenance in CI/CD | DevSecOps Lead |
+
+**Note:** Items marked **ASSUMPTION** or **TODO** throughout this document require owner validation and evidence collection before ATO package completion.
 
 ---
 
@@ -44,7 +61,7 @@ The TRA identifies threats, vulnerabilities, and risks to the system and establi
 | Multi-Tenancy | Cross-tenant data leakage | `SECURITY.md` (Multi-Tenancy section), `backend/app/` tenant isolation logic |
 
 **Azure OpenAI Integration:**  
-- **ASSUMPTION**: API keys are stored in Azure Key Vault and rotated per policy. **TODO**: Confirm Key Vault integration in production deployment.
+- See [Key Assumptions](#key-assumptions) A2 regarding Key Vault integration. **TODO**: Validate assumption A2 and document production configuration.
 
 #### Required Evidence
 - [ ] Completed TRA document (threat modeling, risk ratings, mitigations)
@@ -86,7 +103,7 @@ The PIA evaluates privacy risks associated with the collection, use, and disclos
 
 **Azure OpenAI & Privacy:**
 - User queries and document content are sent to Azure OpenAI endpoints
-- **ASSUMPTION**: Data residency is within approved region. **TODO**: Confirm Azure OpenAI region configuration.
+- See [Key Assumptions](#key-assumptions) A4 regarding data residency. **TODO**: Validate assumption A4.
 - Content filtering enabled per `SECURITY.md`
 
 #### Required Evidence
@@ -290,7 +307,7 @@ Penetration testing validates the effectiveness of security controls through sim
 - **TODO**: Penetration test reports not included in repository
 - **TODO**: ROE template not documented
 - **TODO**: LLM-specific penetration testing scope not defined
-- **ASSUMPTION**: Annual pen test completed per SOC2-COMPLIANCE.md; evidence required
+- See [Key Assumptions](#key-assumptions) A5 regarding annual pen test completion; evidence required
 
 #### Owner and Priority
 | Owner | Priority |
@@ -412,8 +429,8 @@ Validates that secrets are properly managed, rotated, and not exposed. Required 
 - SECURITY.md recommends "Use secret management services (Azure Key Vault, AWS Secrets Manager)"
 
 **Azure Key Vault Integration:**
-- **ASSUMPTION**: Production deployment uses Azure Key Vault for secret storage
-- **TODO**: Confirm Key Vault integration and rotation policies
+- See [Key Assumptions](#key-assumptions) A2 regarding Key Vault secret storage
+- **TODO**: Validate assumption A2 and confirm rotation policies
 
 #### Required Evidence
 - [ ] Secrets inventory (all secrets identified and classified)
@@ -457,9 +474,9 @@ Validates identity management, authentication, and authorization controls. Requi
 | API Authentication | X-API-Key, X-Tenant-ID | `README.md` (API Keys section), `DEMO-GUIDE.md` |
 
 **Azure Identity Integration:**
-- **ASSUMPTION**: Production uses Entra ID (Azure AD) for user authentication
-- **ASSUMPTION**: Azure Managed Identities used for service-to-service auth
-- **TODO**: Confirm identity configuration with deployment team
+- See [Key Assumptions](#key-assumptions) A3 regarding Entra ID for user authentication
+- See [Key Assumptions](#key-assumptions) A1 regarding Azure Managed Identities for service-to-service auth
+- **TODO**: Validate assumptions A1 and A3 with deployment team
 
 **Current Implementation:**
 - SECURITY.md states "OAuth2 + JWT authentication with RS256 signing"
