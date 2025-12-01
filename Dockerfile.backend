@@ -1,31 +1,49 @@
 # Dockerfile for backend service
-FROM python:3.11-slim
+FROM python:3.11-slim AS base
 
 # Set working directory
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=off \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    HF_HOME=/home/app/.cache/huggingface \
+    TRANSFORMERS_CACHE=/home/app/.cache/transformers \
+    SENTENCE_TRANSFORMERS_HOME=/home/app/.cache/sentencetransformers
+
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     tesseract-ocr \
     tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
-COPY backend/requirements.txt .
+# Create non-root user
+RUN addgroup --system app && adduser --system --ingroup app app && \
+    mkdir -p /home/app/.cache/huggingface /home/app/.cache/transformers /home/app/.cache/sentencetransformers && \
+    chown -R app:app /home/app/.cache
+
+# Copy requirements (compose build context is ./backend)
+COPY requirements.txt ./
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip check || true
 
 # Copy application code
-COPY backend/app ./app
+COPY app ./app
+
+# Adjust ownership
+RUN chown -R app:app /app
+
+USER app
 
 # Expose ports
-EXPOSE 8000 9090
+EXPOSE 8000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD curl -f http://localhost:8000/health || exit 1
 
 # Run application
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

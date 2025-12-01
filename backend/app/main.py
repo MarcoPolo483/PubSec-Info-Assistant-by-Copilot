@@ -27,6 +27,20 @@ logger = logging.getLogger(__name__)
 ingestion_service: IngestionService | None = None
 rag_service: RAGService | None = None
 
+# Simple audit emitter
+def audit(event_type: str, request: Request | None = None, tenant_id: str | None = None, details: dict | None = None):
+    payload = {
+        "event_type": event_type,
+        "tenant_id": tenant_id or (request.headers.get(settings.tenant_header_name) if request else None),
+        "request_id": getattr(request.state, "request_id", None) if request else None,
+        "ip": request.client.host if request and request.client else None,
+        "details": details or {},
+    }
+    try:
+        logger.info("audit", extra={"audit": payload})
+    except Exception:
+        logger.info(f"audit {event_type} {tenant_id}")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -226,12 +240,20 @@ async def ingest_document(
         if response.status == "failed":
             raise HTTPException(status_code=500, detail=response.message)
 
+        # Audit success
+        audit(
+            "ingestion.completed",
+            request=None,
+            tenant_id=tenant_id,
+            details={"filename": file.filename, "document_id": response.document_id},
+        )
         return response
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to ingest document: {e}", exc_info=True)
+        audit("ingestion.failed", request=None, tenant_id=tenant_id, details={"filename": file.filename, "error": str(e)})
         raise HTTPException(status_code=500, detail=f"Failed to ingest document: {str(e)}")
 
 
@@ -254,7 +276,7 @@ async def delete_document(
 
         if result["status"] == "error":
             raise HTTPException(status_code=500, detail=result["message"])
-
+        audit("document.deleted", request=None, tenant_id=tenant_id, details={"document_id": document_id})
         return result
 
     except HTTPException:
@@ -283,6 +305,7 @@ async def get_collection_stats(
         if "error" in stats:
             raise HTTPException(status_code=500, detail=stats["error"])
 
+        audit("collection.stats", request=None, tenant_id=tenant_id, details={})
         return stats
 
     except HTTPException:
@@ -335,6 +358,7 @@ async def query(
             if "tenant_balance" in result:
                 headers["X-Tenant-Balance"] = f"balance:{result['tenant_balance']:.2f}"
 
+        audit("query.completed", request=None, tenant_id=tenant_id, details={"top_k": top_k, "use_cache": use_cache})
         return JSONResponse(content=result, headers=headers)
 
     except ValueError as e:
@@ -366,6 +390,7 @@ async def get_tenant_stats(
         if "error" in stats:
             raise HTTPException(status_code=500, detail=stats["error"])
 
+        audit("tenant.stats.viewed", request=None, tenant_id=tenant_id, details={})
         return stats
 
     except HTTPException:

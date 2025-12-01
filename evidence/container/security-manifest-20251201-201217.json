@@ -1,0 +1,59 @@
+{
+  "timestamp": "2025-12-01T20:12:17.045204Z",
+  "images": {
+    "backend": {
+      "base_image": "python:3.11-slim",
+      "security_features": [
+        "Non-root user (app:app)",
+        "Minimal base image",
+        "No unnecessary packages",
+        "Security headers enabled",
+        "Writable cache directories only",
+        "No secrets in layers"
+      ],
+      "user": "app",
+      "exposed_ports": [
+        "8000"
+      ],
+      "env_vars_secured": true,
+      "health_check": {
+        "enabled": true,
+        "endpoint": "/health",
+        "interval": "10s",
+        "timeout": "5s"
+      }
+    },
+    "frontend": {
+      "base_image": "nginx:alpine",
+      "security_features": [
+        "Minimal Alpine base",
+        "Security headers in nginx.conf",
+        "CSP/COOP/COEP configured",
+        "No caching for HTML",
+        "Immutable assets with cache"
+      ],
+      "user": "nginx",
+      "exposed_ports": [
+        "80"
+      ],
+      "security_headers": [
+        "X-Frame-Options: DENY",
+        "X-Content-Type-Options: nosniff",
+        "Content-Security-Policy",
+        "Referrer-Policy: no-referrer",
+        "Permissions-Policy"
+      ]
+    }
+  },
+  "compliance": {
+    "AC-6": "Least Privilege - non-root users",
+    "SI-3": "Malicious Code Protection - minimal attack surface",
+    "SC-28": "Protection at Rest - no secrets in images"
+  },
+  "scan_tools": [
+    "Trivy (vulnerabilities)",
+    "Hadolint (Dockerfile lint)",
+    "Docker Bench (runtime)"
+  ],
+  "notes": "Trivy scans executed in CI/CD pipelines. Local scans require Docker daemon."
+}

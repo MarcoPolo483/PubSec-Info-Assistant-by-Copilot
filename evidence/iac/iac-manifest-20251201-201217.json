@@ -1,0 +1,60 @@
+{
+  "timestamp": "2025-12-01T20:12:17.439155Z",
+  "iac_files": [
+    "terraform\\main.tf",
+    "terraform\\outputs.tf",
+    "terraform\\variables.tf",
+    "terraform\\modules\\acr\\main.tf",
+    "terraform\\modules\\aks\\main.tf",
+    "terraform\\modules\\application-gateway\\main.tf",
+    "terraform\\modules\\keyvault\\main.tf",
+    "terraform\\modules\\monitoring\\main.tf",
+    "terraform\\modules\\networking\\main.tf",
+    ".pre-commit-config.yaml",
+    "evidence\\dast\\local-backend\\zap.yaml",
+    "evidence\\dast\\local-frontend\\zap.yaml",
+    "evidence\\dast\\local-frontend-hardened\\zap.yaml",
+    "k8s\\base\\backend-deployment.yaml",
+    "k8s\\base\\configmap.yaml",
+    "k8s\\base\\frontend-deployment.yaml",
+    "k8s\\base\\hpa.yaml",
+    "k8s\\base\\ingress.yaml",
+    "k8s\\base\\kustomization.yaml",
+    "k8s\\base\\network-policy.yaml",
+    "k8s\\base\\pdb.yaml",
+    "k8s\\base\\services.yaml",
+    "k8s\\base\\statefulsets.yaml",
+    "docker-compose.yml",
+    ".github\\dependabot.yml",
+    ".github\\workflows\\cd.yml",
+    ".github\\workflows\\ci.yml",
+    ".github\\workflows\\codeql-analysis.yml",
+    ".github\\workflows\\container-security.yml",
+    ".github\\workflows\\deploy-staging-gate.yml",
+    ".github\\workflows\\evidence-archive.yml",
+    ".github\\workflows\\performance.yml",
+    ".github\\workflows\\security.yml",
+    ".github\\workflows\\terraform-guard.yml",
+    ".github\\workflows\\zap-full-scan.yml",
+    "monitoring\\prometheus.yml",
+    "docker-compose.yml"
+  ],
+  "scan_tools": [
+    "Checkov",
+    "tfsec",
+    "Docker Compose validation"
+  ],
+  "security_checks": [
+    "No hardcoded secrets",
+    "Secure network configurations",
+    "Resource tagging for compliance",
+    "Encryption at rest enabled",
+    "Logging and monitoring configured"
+  ],
+  "compliance": {
+    "SA-11": "Developer Security Testing",
+    "CM-2": "Baseline Configuration",
+    "CM-3": "Configuration Change Control"
+  },
+  "notes": "IaC scans executed in .github/workflows/evidence-archive.yml"
+}

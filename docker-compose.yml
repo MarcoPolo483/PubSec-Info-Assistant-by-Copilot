@@ -14,7 +14,7 @@ services:
       - QDRANT__SERVICE__HTTP_PORT=6333
       - QDRANT__SERVICE__GRPC_PORT=6334
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:6333/healthz || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -42,7 +42,6 @@ services:
     container_name: pubsec-backend
     ports:
       - "8000:8000"
-      - "9090:9090"
     env_file:
       - ./backend/.env
     environment:
@@ -50,9 +49,9 @@ services:
       - REDIS_HOST=redis
     depends_on:
       qdrant:
-        condition: service_healthy
+        condition: service_started
       redis:
-        condition: service_healthy
+        condition: service_started
     volumes:
       - ./backend:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload

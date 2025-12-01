@@ -1,0 +1,20 @@
+HTTP/1.1 200 OK
+Server: nginx/1.29.3
+Date: Mon, 01 Dec 2025 18:45:49 GMT
+Content-Type: text/html
+Content-Length: 513
+Last-Modified: Mon, 01 Dec 2025 17:26:11 GMT
+Connection: keep-alive
+ETag: "692dcfb3-201"
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Referrer-Policy: no-referrer
+Permissions-Policy: geolocation=(), microphone=(), camera=()
+Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self';
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Resource-Policy: same-origin
+Cross-Origin-Embedder-Policy: require-corp
+Cache-Control: no-store
+Pragma: no-cache
+Accept-Ranges: bytes
+

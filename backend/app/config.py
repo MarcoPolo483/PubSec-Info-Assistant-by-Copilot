@@ -27,11 +27,19 @@ class Settings(BaseSettings):
     secret_key: str = Field(..., min_length=32)
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
+    jwt_secret_key: str = Field(default="", min_length=0)  # Separate JWT key (uses secret_key if empty)
+    allow_anonymous: bool = False  # Allow unauthenticated access
     cors_origins: list[str] = [
         "http://localhost:3000",
         "http://localhost:8000",
         "http://localhost:5173",  # Added to support local Vite dev & contract tests
     ]
+    
+    # Rate Limiting
+    rate_limit_enabled: bool = True
+    rate_limit_window: int = 60  # seconds
+    rate_limit_max_requests: int = 300  # requests per window
+    rate_limit_redis_backend: bool = True  # Use Redis (True) or in-memory (False)
 
     # Multi-Tenancy
     tenant_header_name: str = "X-Tenant-ID"
@@ -85,3 +93,7 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Derive JWT secret from secret_key if not explicitly set
+if not settings.jwt_secret_key:
+    settings.jwt_secret_key = settings.secret_key

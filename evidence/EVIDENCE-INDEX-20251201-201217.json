@@ -1,0 +1,212 @@
+{
+  "generated": "2025-12-01T20:12:17.511585Z",
+  "version": "1.0",
+  "categories": {
+    "container": {
+      "file_count": 1,
+      "files": [
+        {
+          "name": "security-manifest-20251201-201217.json",
+          "path": "container\\security-manifest-20251201-201217.json",
+          "size_bytes": 1641,
+          "modified": "2025-12-01T15:12:17.046206"
+        }
+      ]
+    },
+    "dast": {
+      "file_count": 14,
+      "files": [
+        {
+          "name": "LOCAL-BASELINE-SUMMARY.md",
+          "path": "dast\\LOCAL-BASELINE-SUMMARY.md",
+          "size_bytes": 4029,
+          "modified": "2025-12-01T14:51:17.462747"
+        },
+        {
+          "name": "prompt-injection-results.json",
+          "path": "dast\\local-backend\\prompt-injection-results.json",
+          "size_bytes": 1940,
+          "modified": "2025-12-01T13:40:58.376312"
+        },
+        {
+          "name": "zap-backend.html",
+          "path": "dast\\local-backend\\zap-backend.html",
+          "size_bytes": 25852,
+          "modified": "2025-12-01T13:13:02.422789"
+        },
+        {
+          "name": "zap-backend.json",
+          "path": "dast\\local-backend\\zap-backend.json",
+          "size_bytes": 4890,
+          "modified": "2025-12-01T13:13:02.551667"
+        },
+        {
+          "name": "zap-backend.xml",
+          "path": "dast\\local-backend\\zap-backend.xml",
+          "size_bytes": 5679,
+          "modified": "2025-12-01T13:13:02.474117"
+        },
+        {
+          "name": "zap.yaml",
+          "path": "dast\\local-backend\\zap.yaml",
+          "size_bytes": 1059,
+          "modified": "2025-12-01T13:12:24.666003"
+        },
+        {
+          "name": "zap-frontend.html",
+          "path": "dast\\local-frontend\\zap-frontend.html",
+          "size_bytes": 63697,
+          "modified": "2025-12-01T13:12:01.460776"
+        },
+        {
+          "name": "zap-frontend.json",
+          "path": "dast\\local-frontend\\zap-frontend.json",
+          "size_bytes": 21532,
+          "modified": "2025-12-01T13:12:01.644281"
+        },
+        {
+          "name": "zap-frontend.xml",
+          "path": "dast\\local-frontend\\zap-frontend.xml",
+          "size_bytes": 25909,
+          "modified": "2025-12-01T13:12:01.530271"
+        },
+        {
+          "name": "zap.yaml",
+          "path": "dast\\local-frontend\\zap.yaml",
+          "size_bytes": 1062,
+          "modified": "2025-12-01T13:11:23.331162"
+        },
+        {
+          "name": "zap-frontend-hardened.html",
+          "path": "dast\\local-frontend-hardened\\zap-frontend-hardened.html",
+          "size_bytes": 65417,
+          "modified": "2025-12-01T13:46:57.427078"
+        },
+        {
+          "name": "zap-frontend-hardened.json",
+          "path": "dast\\local-frontend-hardened\\zap-frontend-hardened.json",
+          "size_bytes": 23873,
+          "modified": "2025-12-01T13:46:57.690705"
+        },
+        {
+          "name": "zap-frontend-hardened.xml",
+          "path": "dast\\local-frontend-hardened\\zap-frontend-hardened.xml",
+          "size_bytes": 29079,
+          "modified": "2025-12-01T13:46:57.542526"
+        },
+        {
+          "name": "zap.yaml",
+          "path": "dast\\local-frontend-hardened\\zap.yaml",
+          "size_bytes": 1089,
+          "modified": "2025-12-01T13:46:14.582270"
+        }
+      ]
+    },
+    "dr": {
+      "file_count": 0,
+      "files": []
+    },
+    "iac": {
+      "file_count": 1,
+      "files": [
+        {
+          "name": "iac-manifest-20251201-201217.json",
+          "path": "iac\\iac-manifest-20251201-201217.json",
+          "size_bytes": 2085,
+          "modified": "2025-12-01T15:12:17.442671"
+        }
+      ]
+    },
+    "iam": {
+      "file_count": 0,
+      "files": []
+    },
+    "monitoring": {
+      "file_count": 0,
+      "files": []
+    },
+    "privacy": {
+      "file_count": 0,
+      "files": []
+    },
+    "ra": {
+      "file_count": 0,
+      "files": []
+    },
+    "sast": {
+      "file_count": 2,
+      "files": [
+        {
+          "name": "javascript.sarif",
+          "path": "sast\\javascript.sarif",
+          "size_bytes": 532232,
+          "modified": "2025-12-01T12:04:56.785840"
+        },
+        {
+          "name": "python.sarif",
+          "path": "sast\\python.sarif",
+          "size_bytes": 294848,
+          "modified": "2025-12-01T12:04:56.787844"
+        }
+      ]
+    },
+    "sbom": {
+      "file_count": 1,
+      "files": [
+        {
+          "name": "backend-sbom-20251201-201213.json",
+          "path": "sbom\\backend-sbom-20251201-201213.json",
+          "size_bytes": 38349,
+          "modified": "2025-12-01T15:12:17.002031"
+        }
+      ]
+    },
+    "sca": {
+      "file_count": 0,
+      "files": []
+    }
+  },
+  "total_files": 19,
+  "compliance_mapping": {
+    "sast": [
+      "SA-11",
+      "SI-2"
+    ],
+    "dast": [
+      "CA-8",
+      "RA-5"
+    ],
+    "sbom": [
+      "SA-15",
+      "SR-4"
+    ],
+    "container": [
+      "SI-3",
+      "AC-6"
+    ],
+    "iac": [
+      "SA-11",
+      "CM-2"
+    ],
+    "dr": [
+      "CP-9",
+      "CP-10"
+    ],
+    "monitoring": [
+      "SI-4",
+      "CA-7"
+    ],
+    "iam": [
+      "IA-5",
+      "AC-2"
+    ],
+    "privacy": [
+      "AP-1",
+      "AP-2"
+    ],
+    "ra": [
+      "RA-3",
+      "RA-5"
+    ]
+  }
+}

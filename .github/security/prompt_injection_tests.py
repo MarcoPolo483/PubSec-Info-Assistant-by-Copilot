@@ -6,11 +6,11 @@ from typing import List, Dict
 import requests
 
 TARGET_URL = os.environ.get("TARGET_URL", "").rstrip("/")
-API_PATH = os.environ.get("API_PATH", "/api/chat")
+API_PATH = os.environ.get("API_PATH", "/api/v1/query")  # Default to backend query endpoint
+OUTPUT_PATH = os.environ.get("OUTPUT_PATH", "prompt-injection-results.json")
 BEARER_TOKEN = os.environ.get("BEARER_TOKEN", "")
 TENANT_ID = os.environ.get("TENANT_ID", "")
-AUTH_USERNAME = os.environ.get("AUTH_USERNAME", "")
-AUTH_PASSWORD = os.environ.get("AUTH_PASSWORD", "")
+API_KEY = os.environ.get("X_API_KEY", "")  # Optional simple API key header
 
 if not TARGET_URL:
     print("TARGET_URL is required", file=sys.stderr)
@@ -20,6 +20,8 @@ if BEARER_TOKEN:
     headers["Authorization"] = f"Bearer {BEARER_TOKEN}"
 if TENANT_ID:
     headers["X-Tenant-ID"] = TENANT_ID
+if API_KEY:
+    headers["X-API-Key"] = API_KEY
 
 # Basic prompt-injection/jailbreak set
 PROMPTS: List[str] = [
@@ -41,7 +43,8 @@ endpoint = f"{TARGET_URL}{API_PATH}"
 results: List[Dict] = []
 
 for i, p in enumerate(PROMPTS, start=1):
-    payload = {"prompt": p}
+    # Backend expects JSON body with key 'query'
+    payload = {"query": p}
     try:
         resp = requests.post(endpoint, headers=headers, json=payload, timeout=60)
         entry = {
@@ -72,11 +75,11 @@ for i, p in enumerate(PROMPTS, start=1):
             "error": str(e),
         })
 
-with open("prompt-injection-results.json", "w", encoding="utf-8") as f:
+with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
     json.dump({
         "target": endpoint,
         "count": len(results),
         "results": results,
     }, f, ensure_ascii=False, indent=2)
 
-print(f"Wrote prompt-injection-results.json with {len(results)} entries")
+print(f"Wrote {OUTPUT_PATH} with {len(results)} entries")

@@ -1,0 +1,171 @@
+name: Deploy to Staging with Security Gate
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  STAGING_URL: https://staging.pubsec-info-assistant.example.com
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+  security-events: write
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging Environment
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile.backend
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:staging
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:staging
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Set AKS context
+        uses: azure/aks-set-context@v4
+        with:
+          resource-group: ${{ secrets.STAGING_RG }}
+          cluster-name: ${{ secrets.STAGING_AKS_CLUSTER }}
+
+      - name: Deploy to AKS staging
+        run: |
+          kubectl set image deployment/backend backend=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ github.sha }} -n staging
+          kubectl set image deployment/frontend frontend=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ github.sha }} -n staging
+          kubectl rollout status deployment/backend -n staging --timeout=5m
+          kubectl rollout status deployment/frontend -n staging --timeout=5m
+
+      - name: Wait for staging to stabilize
+        run: sleep 60
+
+  dast-active-scan:
+    name: DAST Active Scan (ZAP)
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: ZAP Active Scan
+        uses: zaproxy/action-full-scan@v0.10.0
+        with:
+          target: ${{ env.STAGING_URL }}
+          cmd_options: '-a -j -r zap-active-report.html'
+          allow_issue_writing: false
+
+      - name: Upload ZAP report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-active-scan-report
+          path: zap-active-report.html
+
+      - name: Parse ZAP findings
+        id: zap-check
+        run: |
+          # Check if any HIGH or CRITICAL alerts exist
+          HIGH_COUNT=$(grep -oP '(?<=<riskcode>3</riskcode>)' zap-active-report.html | wc -l || echo 0)
+          CRITICAL_COUNT=$(grep -oP '(?<=<riskcode>4</riskcode>)' zap-active-report.html | wc -l || echo 0)
+          echo "high_alerts=${HIGH_COUNT}" >> $GITHUB_OUTPUT
+          echo "critical_alerts=${CRITICAL_COUNT}" >> $GITHUB_OUTPUT
+          
+          if [[ $HIGH_COUNT -gt 0 || $CRITICAL_COUNT -gt 0 ]]; then
+            echo "⚠️ DAST gate FAILED: ${CRITICAL_COUNT} CRITICAL, ${HIGH_COUNT} HIGH alerts found"
+            exit 1
+          else
+            echo "✅ DAST gate PASSED: No HIGH or CRITICAL alerts"
+          fi
+
+      - name: Upload to evidence archive
+        if: always()
+        run: |
+          mkdir -p evidence/dast/staging/
+          cp zap-active-report.html "evidence/dast/staging/zap-active-$(date +%Y%m%d-%H%M%S).html"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add evidence/dast/staging/
+          git commit -m "chore: archive staging DAST active scan results [skip ci]" || echo "No changes to commit"
+          git push
+
+  manual-approval:
+    name: Manual Approval for Production
+    runs-on: ubuntu-latest
+    needs: dast-active-scan
+    environment:
+      name: production
+    steps:
+      - name: Await approval
+        run: echo "✅ Manual approval granted for production deployment"
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: manual-approval
+    environment:
+      name: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Set AKS context
+        uses: azure/aks-set-context@v4
+        with:
+          resource-group: ${{ secrets.PRODUCTION_RG }}
+          cluster-name: ${{ secrets.PRODUCTION_AKS_CLUSTER }}
+
+      - name: Deploy to AKS production
+        run: |
+          kubectl set image deployment/backend backend=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ github.sha }} -n production
+          kubectl set image deployment/frontend frontend=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ github.sha }} -n production
+          kubectl rollout status deployment/backend -n production --timeout=10m
+          kubectl rollout status deployment/frontend -n production --timeout=10m
+
+      - name: Notify deployment
+        run: |
+          echo "🚀 Production deployment complete: ${{ github.sha }}"
+          # Optional: POST to Slack/Teams webhook
