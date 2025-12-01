@@ -1,3 +1,26 @@
+# Terraform Working Practices
+
+- Do not commit real `*.tfvars` files. Use `*.tfvars.example` templates and copy to local files (e.g., `dev.tfvars`).
+- State and plan files are ignored by `.gitignore` (`*.tfplan`, `plan-*.txt`, `*.tfstate*`).
+- Pre-commit runs `terraform fmt`, `validate`, `tflint`, `tfsec`, and secrets scanning.
+- CI guardrails block forbidden files and run pre-commit checks on every PR.
+
+Quickstart
+```
+cd terraform
+cp environments/dev.tfvars.example environments/dev.tfvars
+# edit your values, then validate and plan
+terraform init
+terraform validate
+terraform plan -var-file="environments/dev.tfvars"
+```
+
+Install pre-commit locally
+```
+pip install pre-commit
+pre-commit install
+pre-commit run --all-files
+```
 # Azure Infrastructure Deployment - Terraform
 
 Production-ready Infrastructure-as-Code for deploying EVA Domain Assistant 2.0 to Azure using AKS, ACR, and supporting services.

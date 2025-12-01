@@ -1,0 +1,13 @@
+# Copy to a new file (e.g., dev.tfvars) and customize.
+environment           = "dev"
+location              = "eastus"
+aks_kubernetes_version = "1.33.5"
+aks_service_cidr       = "10.2.0.0/16"
+aks_dns_service_ip     = "10.2.0.10"
+
+# Add any module variables here (these are examples and may differ):
+# node_vm_size        = "Standard_B2s"
+# node_count          = 1
+# enable_monitoring   = true
+
+# Do NOT commit real *.tfvars files. Use *.tfvars.example only.
