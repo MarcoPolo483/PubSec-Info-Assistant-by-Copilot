@@ -13,7 +13,7 @@ function App() {
         <QueryInterface tenantId={tenantId} />
       </main>
       <footer className="footer">
-        <p>PubSec Info Assistant v0.1.0 | Enterprise RAG System</p>
+        <p>EVA Domain Assistant 2.0 v0.1.0 | Enterprise RAG System</p>
         <p>Multi-tenant • SOC2 Ready • WCAG 2.1 AA</p>
       </footer>
     </div>

@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-    Automated T-Shirt Sized Deployment for PubSec Info Assistant on Azure
+    Automated T-Shirt Sized Deployment for EVA Domain Assistant 2.0 on Azure
 
 .DESCRIPTION
-    This script automates the deployment of PubSec Info Assistant to Azure using
+    This script automates the deployment of EVA Domain Assistant 2.0 to Azure using
     predefined t-shirt sizes (XS, S, M, L). It handles Terraform initialization,
     configuration, validation, and deployment with the appropriate parameters for
     each size.
@@ -640,7 +640,7 @@ function Show-NextSteps {
 # =============================================================================
 
 function Main {
-    Write-Banner "PubSec Info Assistant - T-Shirt Sized Deployment"
+    Write-Banner "EVA Domain Assistant 2.0 - T-Shirt Sized Deployment"
 
     # Show deployment configuration
     Show-DeploymentSummary -Size $Size -Environment $Environment -Location $Location

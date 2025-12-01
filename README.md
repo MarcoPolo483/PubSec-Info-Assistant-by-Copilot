@@ -1,7 +1,7 @@
-# PubSec Information Assistant 🏛️
+# EVA Domain Assistant 2.0 🏛️
 
-[![CI](https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot/actions/workflows/ci.yml/badge.svg)](https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/MarcoPolo483/PubSec-Info-Assistant-by-Copilot/branch/main/graph/badge.svg)](https://codecov.io/gh/MarcoPolo483/PubSec-Info-Assistant-by-Copilot)
+[![CI](https://github.com/EVA-Suite/eva-da-2/actions/workflows/ci.yml/badge.svg)](https://github.com/EVA-Suite/eva-da-2/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/EVA-Suite/eva-da-2/branch/main/graph/badge.svg)](https://codecov.io/gh/EVA-Suite/eva-da-2)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
@@ -39,7 +39,7 @@ Built by **autonomous AI agents** following enterprise best practices. Productio
 
 ## 🎯 Overview
 
-PubSec Information Assistant answers policy, process, and public-sector information questions with **evidence-backed citations** and **provenance tracking**. Designed for government agencies, public sector organizations, and enterprises requiring:
+EVA Domain Assistant 2.0 answers policy, process, and public-sector information questions with **evidence-backed citations** and **provenance tracking**. Designed for government agencies, public sector organizations, and enterprises requiring:
 
 - ✅ **Auditable AI** with source citations and confidence scores
 - ✅ **Multi-Tenancy** supporting 1000+ tenants with data/resource/network isolation
@@ -74,8 +74,8 @@ PubSec Information Assistant answers policy, process, and public-sector informat
 ### 1. Clone and Setup
 
 ```bash
-git clone https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot.git
-cd PubSec-Info-Assistant-by-Copilot
+git clone https://github.com/EVA-Suite/eva-da-2.git
+cd eva-da-2
 
 # Copy environment template
 cp .env.example .env
@@ -455,8 +455,8 @@ We welcome contributions! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 ```bash
 # Fork and clone
-git clone https://github.com/YOUR_USERNAME/PubSec-Info-Assistant-by-Copilot.git
-cd PubSec-Info-Assistant-by-Copilot
+git clone https://github.com/YOUR_USERNAME/eva-da-2.git
+cd eva-da-2
 
 # Create feature branch
 git checkout -b feat/my-feature
@@ -496,8 +496,8 @@ This project is licensed under the **MIT License** - see [LICENSE](LICENSE) file
 ## 📞 Support
 
 - **Documentation**: [Full docs](docs/)
-- **Issues**: [GitHub Issues](https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot/discussions)
+- **Issues**: [GitHub Issues](https://github.com/EVA-Suite/eva-da-2/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/EVA-Suite/eva-da-2/discussions)
 - **Security**: marco.polo483@protonmail.com
 
 ---
@@ -532,7 +532,7 @@ This project is licensed under the **MIT License** - see [LICENSE](LICENSE) file
 
 ## 🌟 Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=MarcoPolo483/PubSec-Info-Assistant-by-Copilot&type=Date)](https://star-history.com/#MarcoPolo483/PubSec-Info-Assistant-by-Copilot&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=EVA-Suite/eva-da-2&type=Date)](https://star-history.com/#EVA-Suite/eva-da-2&Date)
 
 ---
 

@@ -1,6 +1,6 @@
 # T-Shirt Sizing Guide for Azure Deployment
 
-Complete guide for deploying PubSec Info Assistant to Azure using standardized t-shirt sizes. Each size is optimized for specific use cases with pre-configured resource allocations, cost estimates, and performance characteristics.
+Complete guide for deploying EVA Domain Assistant 2.0 to Azure using standardized t-shirt sizes. Each size is optimized for specific use cases with pre-configured resource allocations, cost estimates, and performance characteristics.
 
 ## 📊 Quick Comparison
 
@@ -507,7 +507,7 @@ az account show
 ### 3. Clone Repository
 
 ```bash
-cd "c:\Users\marco\Documents\_AI Dev\EVA Suite\PubSec-Info-Assistant-by-Copilot"
+cd "c:\Users\marco\Documents\_AI Dev\EVA Suite\eva-da-2"
 ```
 
 ### 4. Deploy with Automation Script

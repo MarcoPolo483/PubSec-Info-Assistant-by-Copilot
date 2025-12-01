@@ -1,8 +1,8 @@
-# PubSec Information Assistant - Project Completion Summary
+# EVA Domain Assistant 2.0 - Project Completion Summary
 
 **Project**: Enterprise RAG System for Public Sector  
 **Timeline**: 10-week roadmap (completed ahead of schedule)  
-**Repository**: https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot  
+**Repository**: https://github.com/EVA-Suite/eva-da-2  
 **Status**: ✅ **100% Complete - Production Ready**
 
 ---
@@ -527,8 +527,8 @@ MIT License - See [LICENSE](LICENSE) for details
 
 ## Contact
 
-- **Repository**: https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot
-- **Issues**: https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot/issues
+- **Repository**: https://github.com/EVA-Suite/eva-da-2
+- **Issues**: https://github.com/EVA-Suite/eva-da-2/issues
 - **Security**: security@pubsec.gov (see [SECURITY.md](SECURITY.md))
 - **Accessibility**: accessibility@pubsec.gov (see [WCAG-STATEMENT.md](docs/compliance/WCAG-STATEMENT.md))
 

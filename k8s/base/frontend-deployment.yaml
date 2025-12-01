@@ -25,7 +25,7 @@ spec:
         fsGroup: 101
       containers:
       - name: frontend
-        image: ghcr.io/marcopolo483/pubsec-info-assistant-by-copilot/frontend:latest
+        image: ghcr.io/eva-suite/eva-da-2/frontend:latest
         imagePullPolicy: Always
         ports:
         - name: http

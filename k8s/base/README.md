@@ -1,6 +1,6 @@
 # Kubernetes Base Manifests
 
-This directory contains base Kubernetes manifests for the PubSec Info Assistant system.
+This directory contains base Kubernetes manifests for the EVA Domain Assistant 2.0 system.
 
 ## Structure
 

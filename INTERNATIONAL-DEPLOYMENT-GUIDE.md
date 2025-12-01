@@ -1,6 +1,6 @@
 # International Deployment Guide 🌍
 
-**Product**: PubSec Information Assistant  
+**Product**: EVA Domain Assistant 2.0  
 **Version**: 1.0.0  
 **Status**: ✅ **Certified for International Production Deployment**  
 **Date**: November 30, 2025  
@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-PubSec Information Assistant is a **production-ready, enterprise-grade AI system** designed specifically for international government and public sector deployment. This guide provides decision-makers with everything needed to evaluate, approve, and deploy the system within 15 minutes.
+EVA Domain Assistant 2.0 is a **production-ready, enterprise-grade AI system** designed specifically for international government and public sector deployment. This guide provides decision-makers with everything needed to evaluate, approve, and deploy the system within 15 minutes.
 
 ### 🎯 Quick Decision Metrics
 
@@ -116,8 +116,8 @@ This demo showcases core capabilities without technical setup.
 # Download: https://www.docker.com/products/docker-desktop
 
 # 2. Clone repository
-git clone https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot.git
-cd PubSec-Info-Assistant-by-Copilot
+git clone https://github.com/EVA-Suite/eva-da-2.git
+cd eva-da-2
 
 # 3. Configure API key (use demo key or your own)
 cp .env.example .env
@@ -555,14 +555,14 @@ enable_geo_replication = false  # Single-region deployment
 ### Support Tiers
 
 **Tier 1: Self-Service** (24/7)
-- Documentation: https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot/tree/main/docs
+- Documentation: https://github.com/EVA-Suite/eva-da-2/tree/main/docs
 - Demo Guide: [DEMO-GUIDE.md](./DEMO-GUIDE.md)
 - FAQ: [docs/FAQ.md](./docs/FAQ.md)
 - Status Page: https://status.pubsec.gov
 
 **Tier 2: Community Support** (Business hours)
-- GitHub Issues: https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot/issues
-- Discussions: https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot/discussions
+- GitHub Issues: https://github.com/EVA-Suite/eva-da-2/issues
+- Discussions: https://github.com/EVA-Suite/eva-da-2/discussions
 - Response Time: <24 hours
 
 **Tier 3: Enterprise Support** (24/7, for paid customers)
@@ -654,7 +654,7 @@ enable_geo_replication = false  # Single-region deployment
 
 ### Case Study 1: Federal Agency (USA)
 - **Challenge**: 50,000 policy documents, 200 employees spending 15 min/day searching
-- **Solution**: PubSec Info Assistant with FedRAMP deployment
+- **Solution**: EVA Domain Assistant 2.0 with FedRAMP deployment
 - **Results**:
   - 75% reduction in search time (15 min → 4 min)
   - $1.8M annual savings (productivity + reduced support tickets)
@@ -700,9 +700,9 @@ enable_geo_replication = false  # Single-region deployment
 - [docs/runbooks/DISASTER-RECOVERY.md](./docs/runbooks/DISASTER-RECOVERY.md) - DR plan and testing
 
 ### Community
-- GitHub: https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot
-- Issues: https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot/issues
-- Discussions: https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot/discussions
+- GitHub: https://github.com/EVA-Suite/eva-da-2
+- Issues: https://github.com/EVA-Suite/eva-da-2/issues
+- Discussions: https://github.com/EVA-Suite/eva-da-2/discussions
 
 ---
 
@@ -710,7 +710,7 @@ enable_geo_replication = false  # Single-region deployment
 
 **Status**: ✅ **CERTIFIED FOR INTERNATIONAL PRODUCTION DEPLOYMENT**
 
-**Summary**: PubSec Information Assistant meets all technical, compliance, and operational requirements for international government and public sector deployment. The system has been validated through:
+**Summary**: EVA Domain Assistant 2.0 meets all technical, compliance, and operational requirements for international government and public sector deployment. The system has been validated through:
 
 - ✅ 154 comprehensive tests (85.32% coverage)
 - ✅ Zero critical security vulnerabilities

@@ -30,7 +30,7 @@ spec:
         fsGroup: 1000
       containers:
       - name: backend
-        image: ghcr.io/marcopolo483/pubsec-info-assistant-by-copilot/backend:latest
+        image: ghcr.io/eva-suite/eva-da-2/backend:latest
         imagePullPolicy: Always
         ports:
         - name: http

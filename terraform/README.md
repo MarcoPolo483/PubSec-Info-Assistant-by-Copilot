@@ -1,6 +1,6 @@
 # Azure Infrastructure Deployment - Terraform
 
-Production-ready Infrastructure-as-Code for deploying PubSec Info Assistant to Azure using AKS, ACR, and supporting services.
+Production-ready Infrastructure-as-Code for deploying EVA Domain Assistant 2.0 to Azure using AKS, ACR, and supporting services.
 
 ## 📋 Table of Contents
 

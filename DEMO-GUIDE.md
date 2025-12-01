@@ -1,4 +1,4 @@
-# PubSec Info Assistant - Complete Demo Guide
+# EVA Domain Assistant 2.0 - Complete Demo Guide
 
 **Duration**: 15 minutes  
 **Prerequisites**: Docker Desktop, 8GB RAM, 10GB disk space  
@@ -8,8 +8,8 @@
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot.git
-cd PubSec-Info-Assistant-by-Copilot
+git clone https://github.com/EVA-Suite/eva-da-2.git
+cd eva-da-2
 ```
 
 ### 2. Configure Environment
@@ -520,7 +520,7 @@ curl https://api.openai.com/v1/models \
 
 ## Additional Resources
 
-- **GitHub Repository**: https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot
+- **GitHub Repository**: https://github.com/EVA-Suite/eva-da-2
 - **Documentation**: See README.md, docs/ directory
 - **Architecture**: See docs/ARCHITECTURE.md
 - **Runbooks**: See docs/runbooks/

@@ -3,7 +3,7 @@
     Automated cleanup script for EVA Domain Assistant 2.0 migration
 
 .DESCRIPTION
-    This script automates the rebranding from PubSec-Info-Assistant-by-Copilot 
+    This script automates the rebranding from eva-da-2 
     to EVA-DA-2, removing all Copilot/Spark references and updating URLs.
 
 .PARAMETER RepoPath
@@ -50,102 +50,102 @@ $ErrorActionPreference = "Stop"
 $script:ReplacementPatterns = @(
     # Repository URLs
     @{
-        Find    = 'https://github\.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot'
+        Find    = 'https://github\.com/EVA-Suite/eva-da-2'
         Replace = 'https://github.com/EVA-Suite/eva-da-2'
         Regex   = $true
     },
     @{
-        Find    = 'github\.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot'
+        Find    = 'github\.com/EVA-Suite/eva-da-2'
         Replace = 'github.com/EVA-Suite/eva-da-2'
         Regex   = $true
     },
     @{
-        Find    = 'MarcoPolo483/PubSec-Info-Assistant-by-Copilot'
+        Find    = 'EVA-Suite/eva-da-2'
         Replace = 'EVA-Suite/eva-da-2'
         Regex   = $false
     },
     
     # Directory names in paths
     @{
-        Find    = 'PubSec-Info-Assistant-by-Copilot'
+        Find    = 'eva-da-2'
         Replace = 'eva-da-2'
         Regex   = $false
     },
     
     # Branch names
     @{
-        Find    = 'merge-spark-copilot'
+        Find    = 'main'
         Replace = 'main'
         Regex   = $false
     },
     @{
-        Find    = '@merge-spark-copilot'
+        Find    = '@main'
         Replace = '@main'
         Regex   = $false
     },
     @{
-        Find    = 'origin/merge-spark-copilot'
+        Find    = 'origin/main'
         Replace = 'origin/main'
         Regex   = $false
     },
     
     # Container registry paths
     @{
-        Find    = 'ghcr\.io/marcopolo483/pubsec-info-assistant-by-copilot'
+        Find    = 'ghcr\.io/marcopolo483/eva-da-2'
         Replace = 'ghcr.io/eva-suite/eva-da-2'
         Regex   = $true
     },
     @{
-        Find    = 'pubsec-info-assistant-by-copilot'
+        Find    = 'eva-da-2'
         Replace = 'eva-da-2'
         Regex   = $false
     },
     
     # Product names
     @{
-        Find    = 'PubSec Info Assistant'
+        Find    = 'EVA Domain Assistant 2.0'
         Replace = 'EVA Domain Assistant 2.0'
         Regex   = $false
     },
     @{
-        Find    = 'PubSec Information Assistant'
+        Find    = 'EVA Domain Assistant 2.0'
         Replace = 'EVA Domain Assistant 2.0'
         Regex   = $false
     },
     @{
-        Find    = 'Info Assistant'
+        Find    = 'EVA Domain Assistant 2.0'
         Replace = 'EVA Domain Assistant 2.0'
         Regex   = $false
     },
     
     # Copilot/Spark references (remove completely)
     @{
-        Find    = '-by-Copilot'
+        Find    = ''
         Replace = ''
         Regex   = $false
     },
     @{
-        Find    = ' by Copilot'
+        Find    = ''
         Replace = ''
         Regex   = $false
     },
     @{
-        Find    = 'by-Copilot'
+        Find    = ''
         Replace = ''
         Regex   = $false
     },
     @{
-        Find    = 'GitHub Copilot Agent'
+        Find    = 'EVA Development Team'
         Replace = 'EVA Development Team'
         Regex   = $false
     },
     @{
-        Find    = 'Built by GitHub Copilot'
+        Find    = 'Built by EVA Suite Team'
         Replace = 'Built by EVA Suite Team'
         Regex   = $false
     },
     @{
-        Find    = 'spark-copilot'
+        Find    = ''
         Replace = ''
         Regex   = $false
     }

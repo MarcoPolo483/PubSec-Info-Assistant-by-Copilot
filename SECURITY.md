@@ -18,7 +18,7 @@ If you discover a security vulnerability, please follow responsible disclosure p
 ### How to Report
 
 1. **Email**: Send details to marco.polo483@protonmail.com
-2. **Subject Line**: "Security Vulnerability - PubSec Info Assistant"
+2. **Subject Line**: "Security Vulnerability - EVA Domain Assistant 2.0"
 3. **Include**:
    - Description of the vulnerability
    - Steps to reproduce
@@ -146,7 +146,7 @@ See [docs/compliance.md](docs/compliance.md) for detailed control mappings.
 ## Security Contacts
 
 * **Primary**: marco.polo483@protonmail.com
-* **Security Advisories**: https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot/security/advisories
+* **Security Advisories**: https://github.com/EVA-Suite/eva-da-2/security/advisories
 
 ## Hall of Fame
 

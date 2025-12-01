@@ -1,7 +1,7 @@
 # Migration Plan: EVA Domain Assistant 2.0 Repository Cleansing
 
 **Date**: November 30, 2025  
-**Purpose**: Prepare PubSec-Info-Assistant-by-Copilot for migration to eva-da-2 repository  
+**Purpose**: Prepare eva-da-2 for migration to eva-da-2 repository  
 **Target**: EVA Domain Assistant 2.0 (EVA-DA-2) - Second product in EVA Suite family
 
 ---
@@ -10,8 +10,8 @@
 
 This repository will become **EVA Domain Assistant 2.0 (EVA-DA-2)**, the second product in the EVA Suite family (first being EVA Sovereign UI). Complete cleansing required to remove all references to:
 - Copilot/Spark development origins
-- Temporary branch names (merge-spark-copilot)
-- Old repository URLs (PubSec-Info-Assistant-by-Copilot)
+- Temporary branch names (main)
+- Old repository URLs (eva-da-2)
 - Development artifacts and leftover naming
 
 **New Identity**:
@@ -27,7 +27,7 @@ This repository will become **EVA Domain Assistant 2.0 (EVA-DA-2)**, the second 
 
 ### 1. Repository Name Change
 
-**Current**: `PubSec-Info-Assistant-by-Copilot`  
+**Current**: `eva-da-2`  
 **New**: `eva-da-2`
 
 **Impact**:
@@ -40,15 +40,15 @@ This repository will become **EVA Domain Assistant 2.0 (EVA-DA-2)**, the second 
 ### 2. Product Branding
 
 **Changes Required**:
-- All "PubSec Info Assistant" → "EVA Domain Assistant 2.0"
-- All "Info Assistant" → "EVA-DA-2" or "Domain Assistant"
-- All "by-Copilot" references → Remove completely
+- All "EVA Domain Assistant 2.0" → "EVA Domain Assistant 2.0"
+- All "EVA Domain Assistant 2.0" → "EVA-DA-2" or "Domain Assistant"
+- All "" references → Remove completely
 - All "by Copilot" references → Remove completely
 
 ### 3. Branch Name Cleanup
 
 **Remove all references to**:
-- `merge-spark-copilot` (temporary merge branch)
+- `main` (temporary merge branch)
 - `spark` (development tool reference)
 - Old feature branches
 
@@ -56,7 +56,7 @@ This repository will become **EVA Domain Assistant 2.0 (EVA-DA-2)**, the second 
 
 **Update Pattern**:
 ```
-OLD: github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot
+OLD: github.com/EVA-Suite/eva-da-2
 NEW: github.com/EVA-Suite/eva-da-2
 ```
 
@@ -130,13 +130,13 @@ NEW: github.com/EVA-Suite/eva-da-2
 
 **Find & Replace**:
 ```
-Find:    https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot
+Find:    https://github.com/EVA-Suite/eva-da-2
 Replace: https://github.com/EVA-Suite/eva-da-2
 
-Find:    github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot
+Find:    github.com/EVA-Suite/eva-da-2
 Replace: github.com/EVA-Suite/eva-da-2
 
-Find:    MarcoPolo483/PubSec-Info-Assistant-by-Copilot
+Find:    EVA-Suite/eva-da-2
 Replace: EVA-Suite/eva-da-2
 ```
 
@@ -144,10 +144,10 @@ Replace: EVA-Suite/eva-da-2
 
 **Find & Replace**:
 ```
-Find:    PubSec-Info-Assistant-by-Copilot
+Find:    eva-da-2
 Replace: eva-da-2
 
-Find:    cd PubSec-Info-Assistant-by-Copilot
+Find:    cd eva-da-2
 Replace: cd eva-da-2
 ```
 
@@ -155,13 +155,13 @@ Replace: cd eva-da-2
 
 **Find & Replace**:
 ```
-Find:    PubSec Info Assistant
+Find:    EVA Domain Assistant 2.0
 Replace: EVA Domain Assistant 2.0
 
-Find:    Info Assistant
+Find:    EVA Domain Assistant 2.0
 Replace: EVA Domain Assistant 2.0
 
-Find:    PubSec Information Assistant
+Find:    EVA Domain Assistant 2.0
 Replace: EVA Domain Assistant 2.0
 ```
 
@@ -169,10 +169,10 @@ Replace: EVA Domain Assistant 2.0
 
 **Find & Replace**:
 ```
-Find:    ghcr.io/marcopolo483/pubsec-info-assistant-by-copilot
+Find:    ghcr.io/eva-suite/eva-da-2
 Replace: ghcr.io/eva-suite/eva-da-2
 
-Find:    pubsec-info-assistant-by-copilot
+Find:    eva-da-2
 Replace: eva-da-2
 ```
 
@@ -180,13 +180,13 @@ Replace: eva-da-2
 
 **Find & Replace**:
 ```
-Find:    merge-spark-copilot
+Find:    main
 Replace: main
 
-Find:    @merge-spark-copilot
+Find:    @main
 Replace: @main
 
-Find:    origin/merge-spark-copilot
+Find:    origin/main
 Replace: origin/main
 ```
 
@@ -194,19 +194,19 @@ Replace: origin/main
 
 **Find & Replace**:
 ```
-Find:    by-Copilot
+Find:    
 Replace: (remove completely)
 
-Find:    by Copilot
+Find:   
 Replace: (remove completely)
 
-Find:    GitHub Copilot Agent
+Find:    EVA Development Team
 Replace: EVA Development Team
 
-Find:    Built by GitHub Copilot
+Find:    Built by EVA Suite Team
 Replace: Built by EVA Suite Team
 
-Find:    spark-copilot
+Find:    
 Replace: (remove completely)
 ```
 
@@ -284,12 +284,12 @@ LABEL org.opencontainers.image.vendor="EVA Suite"
 
 2. **Generate file list for changes**
    ```bash
-   cd "c:\Users\marco\Documents\_AI Dev\EVA Suite\PubSec-Info-Assistant-by-Copilot"
+   cd "c:\Users\marco\Documents\_AI Dev\EVA Suite\eva-da-2"
    
    # Find all files with old references
-   git grep -l "PubSec-Info-Assistant-by-Copilot" > files-to-update.txt
-   git grep -l "merge-spark-copilot" >> files-to-update.txt
-   git grep -l "by-Copilot" >> files-to-update.txt
+   git grep -l "eva-da-2" > files-to-update.txt
+   git grep -l "main" >> files-to-update.txt
+   git grep -l "" >> files-to-update.txt
    sort -u files-to-update.txt -o files-to-update.txt
    ```
 
@@ -332,11 +332,11 @@ Execute PowerShell script to perform bulk find-replace across all files:
    git add .
    git commit -m "refactor: rebrand as EVA Domain Assistant 2.0
 
-Complete rebranding from PubSec-Info-Assistant-by-Copilot to EVA-DA-2:
+Complete rebranding from eva-da-2 to EVA-DA-2:
 - Remove all Copilot/Spark development references
 - Update repository URLs to eva-suite/eva-da-2
 - Rebrand as EVA Domain Assistant 2.0
-- Clean up temporary branch references (merge-spark-copilot)
+- Clean up temporary branch references (main)
 - Update container registry paths
 - Refresh all documentation
 - Align with EVA Suite product family
@@ -421,7 +421,7 @@ If keeping old repository for redirect:
 This repository has been migrated to:
 **https://github.com/EVA-Suite/eva-da-2**
 
-PubSec Info Assistant is now **EVA Domain Assistant 2.0**,
+EVA Domain Assistant 2.0 is now **EVA Domain Assistant 2.0**,
 the second product in the EVA Suite family.
 
 All new development, issues, and discussions should be
@@ -436,8 +436,8 @@ will redirect to the new location.
 ## Success Criteria
 
 ✅ **Complete** when:
-1. Zero references to "by-Copilot" or "by Copilot"
-2. Zero references to "merge-spark-copilot" branch
+1. Zero references to "" or "by Copilot"
+2. Zero references to "main" branch
 3. All GitHub URLs point to eva-suite/eva-da-2
 4. All documentation uses "EVA Domain Assistant 2.0" or "EVA-DA-2"
 5. CI/CD pipelines pass
@@ -474,6 +474,6 @@ will redirect to the new location.
 
 ---
 
-**Prepared By**: GitHub Copilot Agent  
+**Prepared By**: EVA Development Team  
 **Last Updated**: November 30, 2025  
 **Status**: Ready for execution

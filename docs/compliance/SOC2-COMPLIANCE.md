@@ -1,13 +1,13 @@
 # SOC 2 Type II Compliance Documentation
 
-**Organization**: PubSec Info Assistant  
+**Organization**: EVA Domain Assistant 2.0  
 **Report Period**: January 1, 2024 - December 31, 2024  
 **Control Framework**: SOC 2 Trust Services Criteria  
 **Prepared**: November 30, 2024
 
 ## Executive Summary
 
-This document provides evidence of PubSec Info Assistant's compliance with SOC 2 Type II Trust Services Criteria across five categories: Security, Availability, Processing Integrity, Confidentiality, and Privacy.
+This document provides evidence of EVA Domain Assistant 2.0's compliance with SOC 2 Type II Trust Services Criteria across five categories: Security, Availability, Processing Integrity, Confidentiality, and Privacy.
 
 ---
 
@@ -407,7 +407,7 @@ This document provides evidence of PubSec Info Assistant's compliance with SOC 2
 
 ## 7. Management Attestation
 
-We, the management of PubSec Info Assistant, attest that:
+We, the management of EVA Domain Assistant 2.0, attest that:
 
 1. The controls described in this report have been implemented and operated effectively throughout the reporting period (January 1 - December 31, 2024).
 
@@ -438,7 +438,7 @@ Date: November 30, 2024
 ## Appendix B: Evidence Repository
 
 All evidence referenced in this document is stored in:
-- Git repository: https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot
+- Git repository: https://github.com/EVA-Suite/eva-da-2
 - Document management: SharePoint/Compliance folder
 - Audit logs: Splunk/CloudWatch retention
 

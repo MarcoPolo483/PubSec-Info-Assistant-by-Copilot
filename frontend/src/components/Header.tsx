@@ -12,7 +12,7 @@ export default function Header({ tenantId, onTenantChange }: HeaderProps) {
       <div className="header-content">
         <div className="header-left">
           <Building2 size={32} className="logo-icon" aria-hidden="true" />
-          <h1 className="title">PubSec Info Assistant</h1>
+          <h1 className="title">EVA Domain Assistant 2.0</h1>
         </div>
         <div className="header-right">
           <label htmlFor="tenant-select" className="tenant-label">

@@ -19,7 +19,7 @@ commonLabels:
   managed-by: kustomize
 
 images:
-- name: ghcr.io/marcopolo483/pubsec-info-assistant-by-copilot/backend
+- name: ghcr.io/eva-suite/eva-da-2/backend
   newTag: latest
-- name: ghcr.io/marcopolo483/pubsec-info-assistant-by-copilot/frontend
+- name: ghcr.io/eva-suite/eva-da-2/frontend
   newTag: latest

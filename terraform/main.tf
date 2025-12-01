@@ -1,5 +1,5 @@
 # =============================================================================
-# PubSec Info Assistant - Azure Infrastructure (Terraform)
+# EVA Domain Assistant 2.0 - Azure Infrastructure (Terraform)
 # =============================================================================
 # Production-ready Infrastructure-as-Code for Azure deployment
 # Supports: AKS, ACR, Key Vault, Application Gateway, Monitoring

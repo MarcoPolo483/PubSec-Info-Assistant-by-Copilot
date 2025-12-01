@@ -1,4 +1,4 @@
-"""Setup configuration for PubSec Info Assistant backend."""
+"""Setup configuration for EVA Domain Assistant 2.0 backend."""
 from setuptools import find_packages, setup
 
 setup(

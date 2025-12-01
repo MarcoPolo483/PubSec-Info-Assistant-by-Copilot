@@ -1,5 +1,5 @@
 # =============================================================================
-# PubSec Info Assistant - Terraform Outputs
+# EVA Domain Assistant 2.0 - Terraform Outputs
 # =============================================================================
 
 output "outputs_summary" {

@@ -1,6 +1,6 @@
 # WCAG 2.1 AA Accessibility Statement
 
-**Product**: PubSec Info Assistant  
+**Product**: EVA Domain Assistant 2.0  
 **Version**: 1.0  
 **Conformance Level**: WCAG 2.1 Level AA  
 **Last Updated**: November 30, 2024  
@@ -8,11 +8,11 @@
 
 ## Commitment to Accessibility
 
-PubSec Info Assistant is committed to ensuring digital accessibility for people with disabilities. We are continually improving the user experience for everyone and applying the relevant accessibility standards.
+EVA Domain Assistant 2.0 is committed to ensuring digital accessibility for people with disabilities. We are continually improving the user experience for everyone and applying the relevant accessibility standards.
 
 ## Conformance Status
 
-The PubSec Info Assistant web application **conforms** to WCAG 2.1 Level AA standards. This means:
+The EVA Domain Assistant 2.0 web application **conforms** to WCAG 2.1 Level AA standards. This means:
 
 - ✅ All Level A criteria are met
 - ✅ All Level AA criteria are met
@@ -224,7 +224,7 @@ All form inputs include:
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PubSec Info Assistant - Document Search</title>
+  <title>EVA Domain Assistant 2.0 - Document Search</title>
 </head>
 <body>
   <!-- Skip link -->
@@ -234,7 +234,7 @@ All form inputs include:
   
   <!-- Header landmark -->
   <header role="banner">
-    <h1>PubSec Info Assistant</h1>
+    <h1>EVA Domain Assistant 2.0</h1>
   </header>
   
   <!-- Main landmark -->
@@ -245,7 +245,7 @@ All form inputs include:
   
   <!-- Footer landmark -->
   <footer role="contentinfo">
-    <p>&copy; 2024 PubSec Info Assistant</p>
+    <p>&copy; 2024 EVA Domain Assistant 2.0</p>
   </footer>
 </body>
 </html>
@@ -343,10 +343,10 @@ While not required for WCAG 2.1 AA compliance, we plan to implement:
 
 ## How to Report Accessibility Issues
 
-We welcome feedback on the accessibility of PubSec Info Assistant.
+We welcome feedback on the accessibility of EVA Domain Assistant 2.0.
 
 **Email**: accessibility@pubsec.gov  
-**Subject Line**: Accessibility Feedback - PubSec Info Assistant  
+**Subject Line**: Accessibility Feedback - EVA Domain Assistant 2.0  
 **Response Time**: Within 2 business days
 
 Please include:
@@ -407,7 +407,7 @@ This statement was created on November 30, 2024, based on evaluation completed o
 
 ## Legal Information
 
-This accessibility statement applies to the PubSec Info Assistant web application available at https://pubsec-info-assistant.com.
+This accessibility statement applies to the EVA Domain Assistant 2.0 web application available at https://pubsec-info-assistant.com.
 
 We are committed to maintaining and improving accessibility. This statement will be reviewed and updated quarterly or whenever substantial changes are made to the application.
 

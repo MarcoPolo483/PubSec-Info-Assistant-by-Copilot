@@ -1,6 +1,6 @@
-# Contributing to PubSec Information Assistant
+# Contributing to EVA Domain Assistant 2.0
 
-First off, thank you for considering contributing to PubSec Information Assistant! It's people like you that make this project a great tool for public sector organizations.
+First off, thank you for considering contributing to EVA Domain Assistant 2.0! It's people like you that make this project a great tool for public sector organizations.
 
 ## Code of Conduct
 
@@ -44,8 +44,8 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
 
 ```bash
 # Clone the repository
-git clone https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot.git
-cd PubSec-Info-Assistant-by-Copilot
+git clone https://github.com/EVA-Suite/eva-da-2.git
+cd eva-da-2
 
 # Install dependencies
 ./scripts/setup-dev.sh

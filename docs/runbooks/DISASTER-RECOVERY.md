@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-This Disaster Recovery (DR) plan defines procedures for recovering the PubSec Info Assistant system in the event of catastrophic failure, data loss, or regional outage.
+This Disaster Recovery (DR) plan defines procedures for recovering the EVA Domain Assistant 2.0 system in the event of catastrophic failure, data loss, or regional outage.
 
 ### Recovery Objectives
 
@@ -366,11 +366,11 @@ aws s3 sync s3://pubsec-backups/qdrant/ /tmp/backup-test/ --dryrun
 
 **Customer Email Template** (Major Outage):
 ```
-Subject: Service Restoration Update - PubSec Info Assistant
+Subject: Service Restoration Update - EVA Domain Assistant 2.0
 
 Dear Valued Customer,
 
-We experienced a service disruption affecting the PubSec Info Assistant 
+We experienced a service disruption affecting the EVA Domain Assistant 2.0 
 platform between [START_TIME] and [END_TIME] UTC.
 
 IMPACT:
@@ -389,7 +389,7 @@ We sincerely apologize for any inconvenience. If you have questions,
 please contact support@pubsec.gov.
 
 Regards,
-PubSec Info Assistant Team
+EVA Domain Assistant 2.0 Team
 ```
 
 ---

@@ -1,7 +1,7 @@
 # Deployment Options & Recommendations 🚀
 
 **Last Updated**: November 30, 2025  
-**Product**: PubSec Information Assistant v1.0.0  
+**Product**: EVA Domain Assistant 2.0 v1.0.0  
 **Target**: CTOs, DevOps Teams, System Administrators
 
 ---
@@ -21,8 +21,8 @@
 
 ```bash
 # Complete deployment in 3 commands (5 minutes)
-git clone https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot.git
-cd PubSec-Info-Assistant-by-Copilot
+git clone https://github.com/EVA-Suite/eva-da-2.git
+cd eva-da-2
 docker-compose up -d
 
 # That's it! System is running at:
@@ -132,8 +132,8 @@ sudo sh get-docker.sh
 
 #### Step 1: Clone Repository (1 minute)
 ```bash
-git clone https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot.git
-cd PubSec-Info-Assistant-by-Copilot
+git clone https://github.com/EVA-Suite/eva-da-2.git
+cd eva-da-2
 ```
 
 #### Step 2: Configure Environment (2 minutes)
@@ -933,10 +933,10 @@ Azure/  On-Prem  Azure  K8s
 - **Documentation**: [Full docs](../docs/)
 - **Demo Guide**: [DEMO-GUIDE.md](../DEMO-GUIDE.md)
 - **Troubleshooting**: [terraform/README.md](../terraform/README.md)
-- **GitHub Issues**: https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot/issues
+- **GitHub Issues**: https://github.com/EVA-Suite/eva-da-2/issues
 
 ### Community Support
-- **Discussions**: https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot/discussions
+- **Discussions**: https://github.com/EVA-Suite/eva-da-2/discussions
 - **Response Time**: <24 hours
 
 ### Enterprise Support (Paid Customers)
@@ -956,8 +956,8 @@ Azure/  On-Prem  Azure  K8s
 
 **Ready to deploy?** Start with Docker Compose now:
 ```bash
-git clone https://github.com/MarcoPolo483/PubSec-Info-Assistant-by-Copilot.git
-cd PubSec-Info-Assistant-by-Copilot
+git clone https://github.com/EVA-Suite/eva-da-2.git
+cd eva-da-2
 docker-compose up -d
 ```
 

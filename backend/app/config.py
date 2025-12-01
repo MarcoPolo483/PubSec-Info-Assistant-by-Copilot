@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     # Application
-    app_name: str = "PubSec Info Assistant"
+    app_name: str = "EVA Domain Assistant 2.0"
     app_version: str = "0.1.0"
     environment: Literal["dev", "staging", "prod"] = "dev"
     debug: bool = False

@@ -374,7 +374,7 @@ async def get_tenant_stats(
 async def root() -> dict[str, str]:
     """Root endpoint."""
     return {
-        "message": "PubSec Info Assistant API",
+        "message": "EVA Domain Assistant 2.0 API",
         "version": settings.app_version,
         "docs": "/docs",
         "health": "/health",
