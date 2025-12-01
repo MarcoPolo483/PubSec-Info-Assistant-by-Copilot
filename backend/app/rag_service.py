@@ -68,7 +68,7 @@ class RAGService:
             if not retrieval_response.results:
                 return {
                     "query": query,
-                    "answer": "I cannot find any relevant information. Please try rephrasing or ask about a different topic.",
+                    "answer": "I couldn't find any relevant information and cannot find any sources. Please try rephrasing or ask about a different topic.",
                     "citations": [],
                     "retrieval_results": 0,
                     "cached": False,
